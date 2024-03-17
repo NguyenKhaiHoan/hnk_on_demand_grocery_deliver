@@ -5,77 +5,75 @@ import 'package:on_demand_grocery_deliver/src/features/personalization/controlle
 import 'package:on_demand_grocery_deliver/src/features/personalization/controllers/user_controller.dart';
 import 'package:on_demand_grocery_deliver/src/features/personalization/models/address_model.dart';
 import 'package:on_demand_grocery_deliver/src/repositories/address_repository.dart';
+import 'package:on_demand_grocery_deliver/src/repositories/delivery_person_repository.dart';
+import 'package:on_demand_grocery_deliver/src/routes/app_pages.dart';
 import 'package:on_demand_grocery_deliver/src/utils/utils.dart';
 
 class RegistrationController extends GetxController {
+  var currentStep = 0.obs;
+
   static RegistrationController get instance => Get.find();
 
-  GlobalKey<FormState> addAddressFormKey = GlobalKey<FormState>();
-  final streetController = TextEditingController();
-  var city = ''.obs;
-  var district = ''.obs;
-  var ward = ''.obs;
-  final addressRepository = Get.put(AddressRepository());
-  final addressController = Get.put(AddressController());
-  final userController = Get.put(UserController());
+  GlobalKey<FormState> addInfomationFormKey = GlobalKey<FormState>();
+  final vehicleRegistrationNumberController = TextEditingController();
+  final drivingLicenseNumberController = TextEditingController();
+  final deliveryPersonController = Get.put(DeliveryPersonController());
+  final deliveryPersonRepository = Get.put(DeliveryPersonRepository());
 
   Future<void> saveInfo() async {
     try {
-      HAppUtils.loadingOverlays();
-
       final isConnected = await NetworkController.instance.isConnected();
       if (!isConnected) {
-        HAppUtils.stopLoading();
         return;
       }
 
-      if (userController.user.value.storeImage == '' ||
-          userController.user.value.storeImageBackground == '') {
-        HAppUtils.stopLoading();
-        HAppUtils.showSnackBarWarning('Chọn ảnh',
-            'Bạn chưa chọn đầy đủ ảnh. Hãy chọn đầy đủ ảnh đại diện và ảnh nền cho cửa hàng.');
+      if (!addInfomationFormKey.currentState!.validate()) {
+        HAppUtils.showSnackBarWarning(
+            'Điền đầy đủ thông tin', 'Bạn chưa điền đầy đủ thông tin');
         return;
       }
 
-      if (!addAddressFormKey.currentState!.validate() ||
-          city.value == '' ||
-          district.value == '' ||
-          ward.value == '') {
-        HAppUtils.stopLoading();
-        HAppUtils.showSnackBarWarning('Chọn địa chỉ',
-            'Bạn chưa điền đầy đủ địa chỉ. Hãy chọn đầy đủ Thành phố, Quận/Huyện, Phường/Xã và Số nhà, đường, ngõ.');
-        return;
+      if (deliveryPersonController.user.value.image == '') {
+        HAppUtils.showSnackBarWarning(
+            'Đăng ảnh cá nhân', 'Bạn chưa đăng ảnh cá nhân');
       }
 
-      final address = AddressModel(
-        id: '',
-        city: city.value,
-        district: district.value,
-        ward: ward.value,
-        street: streetController.text.trim(),
-        latitude: 0.0,
-        longitude: 0.0,
-      );
+      await deliveryPersonRepository.updateSingleField(
+          {'DrivingLicenseNumber': drivingLicenseNumberController.text.trim()});
+      await deliveryPersonRepository.updateSingleField({
+        'VehicleRegistrationNumber':
+            vehicleRegistrationNumberController.text.trim()
+      });
 
-      final id = await addressRepository.addAndFindIdForNewAddress(address);
-      address.id = id;
+      currentStep.value += 1;
 
-      addressController.currentAddress.value = address;
       resetFormAddAddress();
-
-      Navigator.of(Get.context!).pop();
-      Get.back();
     } catch (e) {
-      HAppUtils.stopLoading();
       HAppUtils.showSnackBarError('Lỗi', 'Thêm địa chỉ không thành công');
     }
   }
 
+  void saveImage() {
+    if ((deliveryPersonController.user.value.drivingLicenseNumberImage != '') ||
+        (deliveryPersonController.user.value.vehicleRegistrationNumberImage !=
+            '')) {
+      currentStep.value += 1;
+    }
+    HAppUtils.showSnackBarWarning('Đăng tải đủ ảnh',
+        'Bạn chưa đăng tải đầy đủ ảnh cần thiết cho thủ tục hoàn thiện thông tin');
+  }
+
   void resetFormAddAddress() {
-    streetController.clear();
-    city.value = '';
-    district.value = '';
-    ward.value = '';
-    addAddressFormKey.currentState?.reset();
+    drivingLicenseNumberController.clear();
+    vehicleRegistrationNumberController.clear();
+    addInfomationFormKey.currentState?.reset();
+  }
+
+  void checkActiveAccount() async {
+    final deliveryPerson =
+        await deliveryPersonRepository.getDeliveryPersonInformation();
+    if (deliveryPerson.isActiveAccount) {
+      Get.back();
+    }
   }
 }

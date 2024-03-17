@@ -17,7 +17,7 @@ class SectionProfileWidget extends StatelessWidget {
     required this.isSubLoading,
   });
 
-  final userController = UserController.instance;
+  final deliveryPersonController = DeliveryPersonController.instance;
   final bool isSubLoading;
   final String title2;
   final Function()? function;
@@ -39,14 +39,15 @@ class SectionProfileWidget extends StatelessWidget {
           flex: 4,
           child: Align(
             alignment: Alignment.centerRight,
-            child: Obx(() => userController.isLoading.value || isSubLoading
-                ? CustomShimmerWidget.rectangular(height: 8)
-                : Text(
-                    title2,
-                    style: HAppStyle.paragraph2Regular
-                        .copyWith(color: HAppColor.hGreyColorShade600),
-                    textAlign: TextAlign.right,
-                  )),
+            child: Obx(
+                () => deliveryPersonController.isLoading.value || isSubLoading
+                    ? CustomShimmerWidget.rectangular(height: 8)
+                    : Text(
+                        title2,
+                        style: HAppStyle.paragraph2Regular
+                            .copyWith(color: HAppColor.hGreyColorShade600),
+                        textAlign: TextAlign.right,
+                      )),
           ),
         ),
         showIcon

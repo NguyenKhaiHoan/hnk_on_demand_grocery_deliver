@@ -60,4 +60,6 @@ class AddressModel {
     }
     return AddressModel.empty();
   }
+
+  static fromJson(data) {}
 }

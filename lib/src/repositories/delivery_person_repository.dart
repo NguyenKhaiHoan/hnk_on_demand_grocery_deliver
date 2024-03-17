@@ -5,17 +5,17 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:on_demand_grocery_deliver/src/exceptions/firebase_exception.dart';
-import 'package:on_demand_grocery_deliver/src/features/personalization/models/user_model.dart';
+import 'package:on_demand_grocery_deliver/src/features/personalization/models/delivery_person_model.dart';
 import 'package:on_demand_grocery_deliver/src/repositories/authentication_repository.dart';
 
-class UserRepository extends GetxController {
-  static UserRepository get instance => Get.find();
+class DeliveryPersonRepository extends GetxController {
+  static DeliveryPersonRepository get instance => Get.find();
 
   final _db = FirebaseFirestore.instance;
 
-  Future<void> saveUserRecord(UserModel user) async {
+  Future<void> saveDeliveryPersonRecord(DeliveryPersonModel user) async {
     try {
-      await _db.collection('Stores').doc(user.id).set(user.toJon());
+      await _db.collection('DeliveryPersons').doc(user.id).set(user.toJson());
     } on FirebaseException catch (e) {
       throw HFirebaseException(code: e.code).message;
     } catch (e) {
@@ -23,16 +23,16 @@ class UserRepository extends GetxController {
     }
   }
 
-  Future<UserModel> getUserInformation() async {
+  Future<DeliveryPersonModel> getDeliveryPersonInformation() async {
     try {
       final documentSnapshot = await _db
-          .collection('Stores')
+          .collection('DeliveryPersons')
           .doc(AuthenticationRepository.instance.authUser?.uid)
           .get();
       if (documentSnapshot.exists) {
-        return UserModel.fromDocumentSnapshot(documentSnapshot);
+        return DeliveryPersonModel.fromDocumentSnapshot(documentSnapshot);
       } else {
-        return UserModel.empty();
+        return DeliveryPersonModel.empty();
       }
     } on FirebaseException catch (e) {
       throw HFirebaseException(code: e.code).message;
@@ -41,9 +41,12 @@ class UserRepository extends GetxController {
     }
   }
 
-  Future<void> updateUser(UserModel user) async {
+  Future<void> updateDeliveryPerson(DeliveryPersonModel user) async {
     try {
-      await _db.collection('Stores').doc(user.id).update(user.toJon());
+      await _db
+          .collection('DeliveryPersons')
+          .doc(user.id)
+          .update(user.toJson());
     } on FirebaseException catch (e) {
       throw HFirebaseException(code: e.code).message;
     } catch (e) {
@@ -54,7 +57,7 @@ class UserRepository extends GetxController {
   Future<void> updateSingleField(Map<String, dynamic> json) async {
     try {
       await _db
-          .collection('Stores')
+          .collection('DeliveryPersons')
           .doc(AuthenticationRepository.instance.authUser?.uid)
           .update(json);
     } on FirebaseException catch (e) {
@@ -64,9 +67,9 @@ class UserRepository extends GetxController {
     }
   }
 
-  Future<void> removeUserRecord(UserModel user) async {
+  Future<void> removeDeliveryPersonRecord(DeliveryPersonModel user) async {
     try {
-      await _db.collection('Stores').doc(user.id).delete();
+      await _db.collection('DeliveryPersons').doc(user.id).delete();
     } on FirebaseException catch (e) {
       throw HFirebaseException(code: e.code).message;
     } catch (e) {

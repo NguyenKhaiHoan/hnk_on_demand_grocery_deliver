@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:on_demand_grocery_deliver/src/features/authentication/controller/network_controller.dart';
-import 'package:on_demand_grocery_deliver/src/features/personalization/models/user_model.dart';
+import 'package:on_demand_grocery_deliver/src/features/personalization/models/delivery_person_model.dart';
 import 'package:on_demand_grocery_deliver/src/repositories/authentication_repository.dart';
-import 'package:on_demand_grocery_deliver/src/repositories/user_repository.dart';
+import 'package:on_demand_grocery_deliver/src/repositories/delivery_person_repository.dart';
 import 'package:on_demand_grocery_deliver/src/routes/app_pages.dart';
 import 'package:on_demand_grocery_deliver/src/utils/utils.dart';
 
@@ -15,8 +15,6 @@ class SignUpController extends GetxController {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
   final TextEditingController passController = TextEditingController();
-  final TextEditingController descriptionController = TextEditingController();
-
   GlobalKey<FormState> signupFormKey = GlobalKey<FormState>();
 
   var isHide = true.obs;
@@ -49,19 +47,25 @@ class SignUpController extends GetxController {
           .registerWithEmailAndPassword(
               emailController.text.trim(), passController.text.trim());
 
-      final newUser = UserModel(
+      final newUser = DeliveryPersonModel(
           id: userCredential.user!.uid,
           name: nameController.text.trim(),
           email: emailController.text.trim(),
           phoneNumber: phoneController.text.trim(),
-          storeImage: '',
-          storeImageBackground: '',
-          description: descriptionController.text.trim(),
+          image: '',
+          vehicleRegistrationNumber: '',
+          drivingLicenseNumber: '',
+          vehicleRegistrationNumberImage: '',
+          drivingLicenseNumberImage: '',
           creationDate: DateFormat('EEEE, d-M-y', 'vi').format(DateTime.now()),
-          authenticationBy: 'Email');
+          authenticationBy: 'Email',
+          isActiveAccount: false,
+          activeDeliveryRequestId: '',
+          status: false,
+          cloudMessagingToken: '');
 
-      final userRepository = Get.put(UserRepository());
-      await userRepository.saveUserRecord(newUser);
+      final deliveryPersonRepository = Get.put(DeliveryPersonRepository());
+      await deliveryPersonRepository.saveDeliveryPersonRecord(newUser);
 
       HAppUtils.stopLoading();
 

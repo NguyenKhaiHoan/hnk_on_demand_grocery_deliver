@@ -13,20 +13,20 @@ class UserImageLogoWidget extends StatelessWidget {
   });
 
   final bool hasFunction;
-  final userController = UserController.instance;
+  final deliveryPersonController = DeliveryPersonController.instance;
   final rootController = RootController.instance;
 
   final double size;
 
   @override
   Widget build(BuildContext context) {
-    return userController.isLoading.value ||
-            userController.isUploadImageLoading.value
+    return deliveryPersonController.isLoading.value ||
+            deliveryPersonController.isUploadImageLoading.value
         ? CustomShimmerWidget.circular(width: size, height: size)
-        : userController.user.value.storeImage == ''
+        : deliveryPersonController.user.value.image == ''
             ? GestureDetector(
                 onTap: () =>
-                    hasFunction ? rootController.animateToScreen(4) : null,
+                    hasFunction ? rootController.animateToScreen(1) : null,
                 child: Container(
                   color: HAppColor.hBackgroundColor,
                   width: size,
@@ -36,7 +36,7 @@ class UserImageLogoWidget extends StatelessWidget {
                   ),
                 ))
             : ImageNetwork(
-                image: userController.user.value.storeImage,
+                image: deliveryPersonController.user.value.image,
                 height: size,
                 width: size,
                 duration: 500,
@@ -54,7 +54,7 @@ class UserImageLogoWidget extends StatelessWidget {
                   color: Colors.red,
                 ),
                 onTap: () =>
-                    hasFunction ? rootController.animateToScreen(4) : null,
+                    hasFunction ? rootController.animateToScreen(1) : null,
               );
   }
 }

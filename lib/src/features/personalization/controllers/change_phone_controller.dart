@@ -2,7 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:on_demand_grocery_deliver/src/features/authentication/controller/network_controller.dart';
 import 'package:on_demand_grocery_deliver/src/features/personalization/controllers/user_controller.dart';
-import 'package:on_demand_grocery_deliver/src/repositories/user_repository.dart';
+import 'package:on_demand_grocery_deliver/src/repositories/delivery_person_repository.dart';
 import 'package:on_demand_grocery_deliver/src/utils/utils.dart';
 
 class ChangePhoneController extends GetxController {
@@ -10,8 +10,8 @@ class ChangePhoneController extends GetxController {
 
   final TextEditingController phoneController = TextEditingController();
   GlobalKey<FormState> changePhoneFormKey = GlobalKey<FormState>();
-  final userController = UserController.instance;
-  final userRepository = Get.put(UserRepository());
+  final deliveryPersonController = DeliveryPersonController.instance;
+  final deliveryRepository = Get.put(DeliveryPersonRepository());
   var isLoading = false.obs;
 
   @override
@@ -21,8 +21,8 @@ class ChangePhoneController extends GetxController {
   }
 
   Future<void> initPhoneField() async {
-    if (userController.user.value.phoneNumber.isNotEmpty) {
-      phoneController.text = userController.user.value.phoneNumber;
+    if (deliveryPersonController.user.value.phoneNumber!.isNotEmpty) {
+      phoneController.text = deliveryPersonController.user.value.phoneNumber!;
     }
   }
 
@@ -43,10 +43,11 @@ class ChangePhoneController extends GetxController {
       }
 
       var phoneNumber = {'PhoneNumber': phoneController.text.trim()};
-      await userRepository.updateSingleField(phoneNumber);
+      await deliveryRepository.updateSingleField(phoneNumber);
 
-      userController.user.value.phoneNumber = phoneController.text.trim();
-      userController.user.refresh();
+      deliveryPersonController.user.value.phoneNumber =
+          phoneController.text.trim();
+      deliveryPersonController.user.refresh();
 
       HAppUtils.stopLoading();
       HAppUtils.showSnackBarSuccess(

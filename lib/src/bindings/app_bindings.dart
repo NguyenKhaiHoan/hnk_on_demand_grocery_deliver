@@ -13,14 +13,14 @@ class HAppBinding extends Bindings {
   @override
   void dependencies() {
     Get.put<NetworkController>(NetworkController(), permanent: true);
-    Get.lazyPut(() => UserController(), fenix: true);
-    Get.lazyPut(() => AddressController(), fenix: true);
+    // Get.lazyPut(() => UserController(), fenix: true);
+    // Get.lazyPut(() => AddressController(), fenix: true);
     Get.lazyPut(() => ChangeNameController(), fenix: true);
     Get.lazyPut(() => ChangePasswordController(), fenix: true);
     Get.lazyPut(() => VerifyController(), fenix: true);
     Get.lazyPut(() => SignUpController(), fenix: true);
     Get.lazyPut(() => RootController(), fenix: true);
-    // Get.lazyPut(() => HomeController(), fenix: true);
+    Get.lazyPut(() => DeliveryPersonController());
     Get.lazyPut(() => LoginController(), fenix: true);
     // Get.lazyPut(() => ProductController(), fenix: true);
   }

@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:on_demand_grocery_deliver/src/constants/app_colors.dart';
 import 'package:on_demand_grocery_deliver/src/constants/app_sizes.dart';
 import 'package:on_demand_grocery_deliver/src/features/authentication/controller/sign_up_controller.dart';
+import 'package:on_demand_grocery_deliver/src/routes/app_pages.dart';
 import 'package:on_demand_grocery_deliver/src/utils/theme/app_style.dart';
 import 'package:on_demand_grocery_deliver/src/utils/utils.dart';
 
@@ -59,7 +60,7 @@ class FormSignUpWidget extends StatelessWidget {
                   borderSide:
                       BorderSide(color: HAppColor.hGreyColorShade300, width: 1),
                   borderRadius: BorderRadius.circular(10)),
-              hintText: 'Nhập tên cho cửa hàng',
+              hintText: 'Nhập tên của bạn',
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
@@ -81,7 +82,7 @@ class FormSignUpWidget extends StatelessWidget {
                   borderSide:
                       BorderSide(color: HAppColor.hGreyColorShade300, width: 1),
                   borderRadius: BorderRadius.circular(10)),
-              hintText: 'Nhập email của cửa hàng',
+              hintText: 'Nhập email của bạn',
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
@@ -102,7 +103,7 @@ class FormSignUpWidget extends StatelessWidget {
                   borderSide:
                       BorderSide(color: HAppColor.hGreyColorShade300, width: 1),
                   borderRadius: BorderRadius.circular(10)),
-              hintText: 'Nhập số điện thoại cho cửa hàng (tùy chọn)',
+              hintText: 'Nhập số điện thoại của bạn (tùy chọn)',
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
@@ -140,27 +141,6 @@ class FormSignUpWidget extends StatelessWidget {
                   ),
                 ),
               )),
-          gapH12,
-          TextFormField(
-            keyboardType: TextInputType.number,
-            enableSuggestions: true,
-            autocorrect: true,
-            controller: signupController.descriptionController,
-            decoration: InputDecoration(
-              enabledBorder: OutlineInputBorder(
-                  borderSide:
-                      BorderSide(color: HAppColor.hGreyColorShade300, width: 1),
-                  borderRadius: BorderRadius.circular(10)),
-              focusedBorder: OutlineInputBorder(
-                  borderSide:
-                      BorderSide(color: HAppColor.hGreyColorShade300, width: 1),
-                  borderRadius: BorderRadius.circular(10)),
-              hintText: 'Nhập mô tả cửa hàng (tùy chọn)',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-          ),
           gapH12,
           Row(children: [
             SizedBox(
@@ -204,6 +184,7 @@ class FormSignUpWidget extends StatelessWidget {
             onPressed: () {
               FocusScope.of(context).requestFocus(FocusNode());
               signupController.signup();
+              // Get.toNamed(HAppRoutes.registrationStore);
             },
             style: ElevatedButton.styleFrom(
                 backgroundColor: HAppColor.hBluePrimaryColor,

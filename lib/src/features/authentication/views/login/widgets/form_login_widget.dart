@@ -32,7 +32,7 @@ class FormLoginWidget extends StatelessWidget {
             gapH6,
             Text.rich(
               TextSpan(
-                text: 'Chưa có tài khoản cửa hàng? ',
+                text: 'Chưa có tài khoản người giao hàng? ',
                 style: HAppStyle.paragraph2Regular
                     .copyWith(color: HAppColor.hGreyColorShade600),
                 children: [

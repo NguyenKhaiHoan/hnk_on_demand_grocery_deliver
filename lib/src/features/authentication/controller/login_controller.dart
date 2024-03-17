@@ -16,7 +16,7 @@ class LoginController extends GetxController {
   final localStorage = GetStorage();
   var isHide = true.obs;
   var isLoading = false.obs;
-  final userController = UserController.instance;
+  final deliveryController = DeliveryPersonController.instance;
   final networkController = Get.put(NetworkController());
 
   void login() async {

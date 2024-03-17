@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:on_demand_grocery_deliver/src/features/authentication/controller/network_controller.dart';
 import 'package:on_demand_grocery_deliver/src/features/personalization/controllers/user_controller.dart';
 import 'package:on_demand_grocery_deliver/src/features/shop/controllers/root_controller.dart';
-import 'package:on_demand_grocery_deliver/src/repositories/user_repository.dart';
+import 'package:on_demand_grocery_deliver/src/repositories/delivery_person_repository.dart';
 import 'package:on_demand_grocery_deliver/src/utils/utils.dart';
 
 class ChangeNameController extends GetxController {
@@ -11,8 +11,8 @@ class ChangeNameController extends GetxController {
 
   final TextEditingController nameController = TextEditingController();
   GlobalKey<FormState> changeNameFormKey = GlobalKey<FormState>();
-  final userController = UserController.instance;
-  final userRepository = Get.put(UserRepository());
+  final deliveryController = DeliveryPersonController.instance;
+  final deliveryPersonRepository = Get.put(DeliveryPersonRepository());
   final rootController = RootController.instance;
   var isLoading = false.obs;
 
@@ -23,7 +23,7 @@ class ChangeNameController extends GetxController {
   }
 
   Future<void> initNameField() async {
-    nameController.text = userController.user.value.name;
+    nameController.text = deliveryController.user.value.name!;
   }
 
   changeName() async {
@@ -43,10 +43,10 @@ class ChangeNameController extends GetxController {
       }
 
       var name = {'Name': nameController.text.trim()};
-      await userRepository.updateSingleField(name);
+      await deliveryPersonRepository.updateSingleField(name);
 
-      userController.user.value.name = nameController.text.trim();
-      userController.user.refresh();
+      deliveryController.user.value.name = nameController.text.trim();
+      deliveryController.user.refresh();
 
       HAppUtils.stopLoading();
       HAppUtils.showSnackBarSuccess(

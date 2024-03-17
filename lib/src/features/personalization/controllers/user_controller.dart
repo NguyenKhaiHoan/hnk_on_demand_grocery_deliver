@@ -6,19 +6,19 @@ import 'package:intl/intl.dart';
 import 'package:on_demand_grocery_deliver/src/exceptions/firebase_exception.dart';
 import 'package:on_demand_grocery_deliver/src/features/authentication/controller/network_controller.dart';
 import 'package:on_demand_grocery_deliver/src/features/personalization/controllers/address_controller.dart';
-import 'package:on_demand_grocery_deliver/src/features/personalization/models/user_model.dart';
+import 'package:on_demand_grocery_deliver/src/features/personalization/models/delivery_person_model.dart';
 import 'package:on_demand_grocery_deliver/src/repositories/authentication_repository.dart';
-import 'package:on_demand_grocery_deliver/src/repositories/user_repository.dart';
+import 'package:on_demand_grocery_deliver/src/repositories/delivery_person_repository.dart';
 import 'package:on_demand_grocery_deliver/src/utils/utils.dart';
 
-class UserController extends GetxController {
-  static UserController get instance => Get.find();
+class DeliveryPersonController extends GetxController {
+  static DeliveryPersonController get instance => Get.find();
 
-  final userRepository = Get.put(UserRepository());
-  final addressController = Get.put(AddressController());
+  final deliveryPersonRepository = Get.put(DeliveryPersonRepository());
+  // final addressController = Get.put(AddressController());
   final authenticationRepository = Get.put(AuthenticationRepository());
 
-  var user = UserModel.empty().obs;
+  var user = DeliveryPersonModel.empty().obs;
   var isLoading = false.obs;
   var isUploadImageLoading = false.obs;
   var isUploadImageBackgroundLoading = false.obs;
@@ -46,19 +46,25 @@ class UserController extends GetxController {
       await fetchUserRecord();
       if (user.value.id.isEmpty) {
         if (userCredential != null) {
-          final user = UserModel(
+          final user = DeliveryPersonModel(
               id: userCredential.user!.uid,
               name: userCredential.user!.displayName ?? '',
               email: userCredential.user!.email ?? '',
               phoneNumber: userCredential.user!.phoneNumber ?? '',
-              storeImage: userCredential.user!.photoURL ?? '',
-              storeImageBackground: '',
-              description: '',
+              image: userCredential.user!.photoURL ?? '',
+              vehicleRegistrationNumber: '',
+              drivingLicenseNumber: '',
               creationDate:
                   DateFormat('EEEE, d-M-y', 'vi').format(DateTime.now()),
-              authenticationBy: authenticationBy);
+              authenticationBy: authenticationBy,
+              isActiveAccount: false,
+              vehicleRegistrationNumberImage: '',
+              drivingLicenseNumberImage: '',
+              activeDeliveryRequestId: '',
+              status: false,
+              cloudMessagingToken: '');
 
-          await userRepository.saveUserRecord(user);
+          await deliveryPersonRepository.saveDeliveryPersonRecord(user);
         }
       }
     } on FirebaseException catch (e) {
@@ -72,13 +78,14 @@ class UserController extends GetxController {
   Future<void> fetchUserRecord() async {
     try {
       isLoading.value = true;
-      final user = await userRepository.getUserInformation();
+      final user =
+          await deliveryPersonRepository.getDeliveryPersonInformation();
       this.user(user);
       isLoading.value = false;
     } catch (e) {
       isLoading.value = false;
       HAppUtils.showSnackBarError('Lỗi', 'Không tìm thấy dữ liệu của cửa hàng');
-      user(UserModel.empty());
+      user(DeliveryPersonModel.empty());
     } finally {
       isLoading.value = false;
     }
@@ -94,18 +101,19 @@ class UserController extends GetxController {
         return;
       }
 
-      final user = await userRepository.getUserInformation();
+      final user =
+          await deliveryPersonRepository.getDeliveryPersonInformation();
       this.user(user);
       HAppUtils.stopLoading();
     } catch (e) {
       HAppUtils.showSnackBarError('Lỗi', 'Không tìm thấy dữ liệu của cửa hàng');
-      user(UserModel.empty());
+      user(DeliveryPersonModel.empty());
     } finally {
       HAppUtils.stopLoading();
     }
   }
 
-  void uploadStoreImage() async {
+  void uploadDeliveryPersonImage() async {
     try {
       final image = await ImagePicker().pickImage(
           source: ImageSource.gallery,
@@ -114,12 +122,12 @@ class UserController extends GetxController {
           maxWidth: 512);
       if (image != null) {
         isUploadImageLoading.value = true;
-        final imageUrl = await userRepository.uploadImage(
-            'Stores/${user.value.id}/Images/Profile', image);
-        Map<String, dynamic> json = {'StoreImage': imageUrl};
-        await userRepository.updateSingleField(json);
+        final imageUrl = await deliveryPersonRepository.uploadImage(
+            'DeliveryPersons/${user.value.id}/Images/Profile', image);
+        Map<String, dynamic> json = {'Image': imageUrl};
+        await deliveryPersonRepository.updateSingleField(json);
 
-        user.value.storeImage = imageUrl;
+        user.value.image = imageUrl;
         user.refresh();
 
         isUploadImageLoading.value = false;
@@ -130,7 +138,32 @@ class UserController extends GetxController {
     }
   }
 
-  void uploadStoreImageBackground() async {
+  void uploadDriverImage() async {
+    try {
+      final image = await ImagePicker().pickImage(
+          source: ImageSource.gallery,
+          imageQuality: 70,
+          maxHeight: 512,
+          maxWidth: 512);
+      if (image != null) {
+        isUploadImageLoading.value = true;
+        final imageUrl = await deliveryPersonRepository.uploadImage(
+            'DeliveryPersons/${user.value.id}/Images/Profile', image);
+        Map<String, dynamic> json = {'DrivingLicenseNumberImage': imageUrl};
+        await deliveryPersonRepository.updateSingleField(json);
+
+        user.value.drivingLicenseNumberImage = imageUrl;
+        user.refresh();
+
+        isUploadImageLoading.value = false;
+      }
+    } catch (e) {
+      isUploadImageLoading.value = false;
+      HAppUtils.showSnackBarError('Lỗi', e.toString());
+    }
+  }
+
+  void uploadVehicleImage() async {
     try {
       final image = await ImagePicker().pickImage(
           source: ImageSource.gallery,
@@ -139,12 +172,14 @@ class UserController extends GetxController {
           maxWidth: 512);
       if (image != null) {
         isUploadImageBackgroundLoading.value = true;
-        final imageUrl = await userRepository.uploadImage(
-            'Stores/${user.value.id}/Images/Profile', image);
-        Map<String, dynamic> json = {'StoreImageBackground': imageUrl};
-        await userRepository.updateSingleField(json);
+        final imageUrl = await deliveryPersonRepository.uploadImage(
+            'DeliveryPersons/${user.value.id}/Images/Profile', image);
+        Map<String, dynamic> json = {
+          'VehicleRegistrationNumberImage': imageUrl
+        };
+        await deliveryPersonRepository.updateSingleField(json);
 
-        user.value.storeImageBackground = imageUrl;
+        user.value.vehicleRegistrationNumberImage = imageUrl;
         user.refresh();
 
         isUploadImageBackgroundLoading.value = false;

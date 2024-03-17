@@ -5,8 +5,11 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:on_demand_grocery_deliver/src/exceptions/firebase_auth_exceptions.dart';
 import 'package:on_demand_grocery_deliver/src/exceptions/firebase_exception.dart';
+import 'package:on_demand_grocery_deliver/src/features/authentication/controller/registration_store_controller.dart';
 import 'package:on_demand_grocery_deliver/src/repositories/address_repository.dart';
+import 'package:on_demand_grocery_deliver/src/repositories/delivery_person_repository.dart';
 import 'package:on_demand_grocery_deliver/src/routes/app_pages.dart';
+import 'package:on_demand_grocery_deliver/src/services/firebase_notification_service.dart';
 import 'package:on_demand_grocery_deliver/src/utils/utils.dart';
 
 class AuthenticationRepository extends GetxController {
@@ -120,21 +123,33 @@ class AuthenticationRepository extends GetxController {
 
   Future<void> checkUserRegistration(User user) async {
     try {
-      bool userIsRegistered = false;
+      bool deliveryPersonIsRegistered = false;
       await _db
-          .collection('Stores')
+          .collection('DeliveryPersons')
           .where('Id', isEqualTo: user.uid)
           .get()
           .then((value) {
-        userIsRegistered = value.size > 0 ? true : false;
+        deliveryPersonIsRegistered = value.size > 0 ? true : false;
       });
-      if (userIsRegistered) {
+      if (deliveryPersonIsRegistered) {
         if (user.emailVerified) {
+          HNotificationService.initializeFirebaseCloudMessaging();
           Get.offAllNamed(HAppRoutes.root);
-          final addressRepository = Get.put(AddressRepository());
-          final addresses = await addressRepository.getUserAddress();
-          if (addresses.isEmpty) {
+          final registrationController = Get.put(RegistrationController());
+          final deliveryPersonRepository = Get.put(DeliveryPersonRepository());
+          final deliveryPerson =
+              await deliveryPersonRepository.getDeliveryPersonInformation();
+          if (!deliveryPerson.isActiveAccount) {
             Get.toNamed(HAppRoutes.registrationStore);
+            if (deliveryPerson.vehicleRegistrationNumber == '' ||
+                deliveryPerson.drivingLicenseNumber == '') {
+              registrationController.currentStep.value = 0;
+            } else if (deliveryPerson.drivingLicenseNumberImage == '' ||
+                deliveryPerson.vehicleRegistrationNumberImage == '') {
+              registrationController.currentStep.value = 1;
+            } else {
+              registrationController.currentStep.value = 2;
+            }
           }
         } else {
           Get.offAllNamed(HAppRoutes.verify, arguments: {'email': user.email});

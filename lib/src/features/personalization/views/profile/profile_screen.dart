@@ -22,7 +22,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   @override
   bool get wantKeepAlive => true;
 
-  final userController = UserController.instance;
+  final deliveryPersonController = DeliveryPersonController.instance;
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +55,7 @@ class _ProfileScreenState extends State<ProfileScreen>
               GestureDetector(
                 onTap: () async {
                   Get.toNamed(HAppRoutes.profileDetail);
-                  // await userController.loadingUserRecord();
+                  // await deliveryPersonController.loadingUserRecord();
                 },
                 child: Row(
                   children: [
@@ -67,10 +67,10 @@ class _ProfileScreenState extends State<ProfileScreen>
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Obx(() => userController.isLoading.value
+                        Obx(() => deliveryPersonController.isLoading.value
                             ? CustomShimmerWidget.rectangular(height: 10)
                             : Text(
-                                userController.user.value.name,
+                                deliveryPersonController.user.value.name,
                                 style: HAppStyle.heading4Style,
                               )),
                         gapH4,

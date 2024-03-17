@@ -19,7 +19,7 @@ class ChangePasswordController extends GetxController {
   var isHideNewPassword = false.obs;
   var isHideCorrectPassword = false.obs;
 
-  final userController = UserController.instance;
+  final deliveryPersonController = DeliveryPersonController.instance;
 
   changePassword() async {
     try {
@@ -38,7 +38,7 @@ class ChangePasswordController extends GetxController {
 
       await AuthenticationRepository.instance
           .changePasswordWithEmailAndPassword(
-              userController.user.value.email,
+              deliveryPersonController.user.value.email!,
               oldPasswordController.text.trim(),
               newPasswordController.text.trim());
 
