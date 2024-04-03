@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:on_demand_grocery_deliver/src/features/personalization/models/delivery_person_model.dart';
 import 'package:on_demand_grocery_deliver/src/features/shop/models/product_in_cart_model.dart';
-import 'package:on_demand_grocery_deliver/src/features/shop/models/store_model.dart';
+import 'package:on_demand_grocery_deliver/src/features/shop/models/store_order_model.dart';
 import 'package:on_demand_grocery_deliver/src/features/shop/models/user_address_model.dart';
 import 'package:on_demand_grocery_deliver/src/features/shop/models/user_model.dart';
 
@@ -9,15 +9,16 @@ class OrderModel {
   String oderId;
 
   String orderUserId;
-  List<String> orderStoreIds;
+  // List<String> orderStoreIds;
   List<ProductInCartModel> orderProducts;
-  List<StoreModel> orderStores;
   UserModel orderUser;
   UserAddressModel orderUserAddress;
   DeliveryPersonModel? deliveryPerson;
 
-  String? paymentMethod;
-  String? paymentStatus;
+  String paymentMethod;
+  String paymentStatus;
+
+  int price;
 
   String? orderStatus;
   DateTime? orderDate;
@@ -27,46 +28,50 @@ class OrderModel {
   DateTime? waitingTimeToArrive;
   bool? requestedForDelivery;
 
-  OrderModel({
-    required this.oderId,
-    required this.orderUserId,
-    required this.orderStoreIds,
-    required this.orderProducts,
-    required this.orderStores,
-    required this.orderUser,
-    required this.orderUserAddress,
-    this.deliveryPerson,
-    this.paymentMethod,
-    this.paymentStatus,
-    this.orderStatus,
-    this.orderDate,
-    this.waitingTimeForConfirmationFromStore,
-    this.waitingTimeForConfirmationFromDeliveryPerson,
-    this.waitingTimeForPickUp,
-    this.waitingTimeToArrive,
-    this.requestedForDelivery,
-  });
+  List<StoreOrderModel> storeOrders;
+  List<String> notificationDelivery;
+
+  OrderModel(
+      {required this.oderId,
+      required this.orderUserId,
+      required this.storeOrders,
+      required this.orderProducts,
+      required this.orderUser,
+      required this.orderUserAddress,
+      this.deliveryPerson,
+      required this.paymentMethod,
+      required this.paymentStatus,
+      this.orderStatus,
+      this.orderDate,
+      this.waitingTimeForConfirmationFromStore,
+      this.waitingTimeForConfirmationFromDeliveryPerson,
+      this.waitingTimeForPickUp,
+      this.waitingTimeToArrive,
+      this.requestedForDelivery,
+      required this.notificationDelivery,
+      required this.price});
 
   static OrderModel empty() => OrderModel(
         oderId: '',
         orderUserId: '',
-        orderStoreIds: <String>[],
+        storeOrders: <StoreOrderModel>[],
         orderProducts: <ProductInCartModel>[],
-        orderStores: <StoreModel>[],
         orderUser: UserModel.empty(),
         orderUserAddress: UserAddressModel.empty(),
-        deliveryPerson: DeliveryPersonModel.empty(),
+        paymentMethod: '',
+        paymentStatus: '',
+        price: 0,
+        notificationDelivery: [],
       );
 
   Map<String, dynamic> toJson() {
     return {
       'OrderId': oderId,
-      'UserId': orderUserId,
-      'StoreId': orderStoreIds,
+      'OrderUserId': orderUserId,
+      'StoreOrders': storeOrders.map((e) => e.toJson()).toList(),
       'OrderProducts': orderProducts.map((e) => e.toJson()).toList(),
-      'OrderStores': orderStores.map((e) => e.toJson()).toList(),
-      'OrderUser': orderUser.toJon(),
-      'OrderUserAddress': orderUserAddress.toJon(),
+      'OrderUser': orderUser.toJson(),
+      'OrderUserAddress': orderUserAddress.toJson(),
       'DeliveryPerson': deliveryPerson?.toJson(),
       'PaymentMethod': paymentMethod,
       'PaymentStatus': paymentStatus,
@@ -79,6 +84,8 @@ class OrderModel {
       'WaitingTimeForPickUp': waitingTimeForPickUp?.millisecondsSinceEpoch,
       'waitingTimeToArrive': waitingTimeToArrive?.millisecondsSinceEpoch,
       'RequestedForDelivery': requestedForDelivery ?? false,
+      'NotificationDelivery': notificationDelivery,
+      'Price': price
     };
   }
 
@@ -89,36 +96,100 @@ class OrderModel {
       return OrderModel(
         oderId: document.id,
         orderUserId: data['OrderUserId'] ?? '',
-        orderStoreIds: data['OrderStoreId'] ?? '',
+        storeOrders: (data['StoreOrders'] as List<dynamic>)
+            .map((e) => StoreOrderModel.fromJson(e))
+            .toList(),
         orderProducts: (data['OrderProducts'] as List<dynamic>)
             .map((e) => ProductInCartModel.fromJson(e))
             .toList(),
-        orderStores: (data['OrderStores'] as List<dynamic>)
-            .map((e) => StoreModel.fromJson(e))
-            .toList(),
-        orderUser: UserModel.fromJson(data['OderUser']),
+        orderUser: UserModel.fromJson(data['OrderUser']),
         orderUserAddress: UserAddressModel.fromJson(data['OrderUserAddress']),
-        deliveryPerson: DeliveryPersonModel.fromJson(data['DeliveryPerson']),
+        deliveryPerson: data['DeliveryPerson'] != null
+            ? DeliveryPersonModel.fromJson(data['DeliveryPerson'])
+            : null,
         paymentMethod: data['PaymentMethos'] ?? '',
         paymentStatus: data['PaymentStatus'] ?? '',
         orderStatus: data['OrderStatus'] ?? '',
         orderDate: DateTime.fromMillisecondsSinceEpoch(
             int.parse(data['OrderDate'] ?? 0)),
         waitingTimeForConfirmationFromStore:
-            DateTime.fromMillisecondsSinceEpoch(
-                int.parse(data['WaitingTimeForConfirmationFromStore'] ?? 0)),
+            data['WaitingTimeForConfirmationFromStore'] != null
+                ? DateTime.fromMillisecondsSinceEpoch(
+                    int.parse(data['WaitingTimeForConfirmationFromStore'] ?? 0))
+                : null,
         waitingTimeForConfirmationFromDeliveryPerson:
-            DateTime.fromMillisecondsSinceEpoch(int.parse(
-                data['WaitingTimeForConfirmationFromDeliveryPerson'] ?? 0)),
-        waitingTimeForPickUp: DateTime.fromMillisecondsSinceEpoch(
-            int.parse(data['WaitingTimeForPickUp'] ?? 0)),
-        waitingTimeToArrive: DateTime.fromMillisecondsSinceEpoch(
-            int.parse(data['WaitingTimeToArrive'] ?? 0)),
+            data['WaitingTimeForConfirmationFromDeliveryPerson'] != null
+                ? DateTime.fromMillisecondsSinceEpoch(int.parse(
+                    data['WaitingTimeForConfirmationFromDeliveryPerson'] ?? 0))
+                : null,
+        waitingTimeForPickUp: data['WaitingTimeForPickUp'] != null
+            ? DateTime.fromMillisecondsSinceEpoch(
+                int.parse(data['WaitingTimeForPickUp'] ?? 0))
+            : null,
+        waitingTimeToArrive: data['WaitingTimeToArrive'] != null
+            ? DateTime.fromMillisecondsSinceEpoch(
+                int.parse(data['WaitingTimeToArrive'] ?? 0))
+            : null,
         requestedForDelivery: data['RequestedForDelivery'] != null
             ? data['RequestedForDelivery'] as bool
             : null,
+        notificationDelivery:
+            List<String>.from(data['NotificationDelivery'] ?? []),
+        price: data['Price'] ?? 0,
       );
     }
     return OrderModel.empty();
+  }
+
+  factory OrderModel.fromJson(Map<String, dynamic> json) {
+    return OrderModel(
+        oderId: json['OrderId'] ?? '',
+        orderUserId: json['OrderUserId'] ?? '',
+        storeOrders: (json['StoreOrders'] as List<dynamic>)
+            .map((e) => StoreOrderModel.fromJson(e))
+            .toList(),
+        orderProducts: (json['OrderProducts'] as List<dynamic>)
+            .map((e) => ProductInCartModel.fromJson(e))
+            .toList(),
+        orderUser: UserModel.fromJson(json['OrderUser']),
+        orderUserAddress: UserAddressModel.fromJson(json['OrderUserAddress']),
+        deliveryPerson: json['DeliveryPerson'] != null
+            ? DeliveryPersonModel.fromJson(json['DeliveryPerson'])
+            : null,
+        paymentMethod: json['PaymentMethod'] ?? '',
+        paymentStatus: json['PaymentStatus'] ?? '',
+        orderStatus: json['OrderStatus'] ?? '',
+        orderDate: DateTime.fromMillisecondsSinceEpoch(json['OrderDate'] ?? 0),
+        waitingTimeForConfirmationFromStore:
+            json['WaitingTimeForConfirmationFromStore'] != null
+                ? DateTime.fromMillisecondsSinceEpoch(
+                    json['WaitingTimeForConfirmationFromStore'] ?? 0)
+                : null,
+        waitingTimeForConfirmationFromDeliveryPerson:
+            json['WaitingTimeForConfirmationFromDeliveryPerson'] != null
+                ? DateTime.fromMillisecondsSinceEpoch(
+                    json['WaitingTimeForConfirmationFromDeliveryPerson'] ?? 0)
+                : null,
+        waitingTimeForPickUp: json['WaitingTimeForPickUp'] != null
+            ? DateTime.fromMillisecondsSinceEpoch(
+                json['WaitingTimeForPickUp'] ?? 0)
+            : null,
+        waitingTimeToArrive: json['WaitingTimeToArrive'] != null
+            ? DateTime.fromMillisecondsSinceEpoch(
+                json['WaitingTimeToArrive'] ?? 0)
+            : null,
+        requestedForDelivery: json['RequestedForDelivery'] != null
+            ? json['RequestedForDelivery'] as bool
+            : null,
+        notificationDelivery: List<String>.from(json['NotificationDelivery'] ?? []),
+        price: json['Price'] ?? 0);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (other is OrderModel) {
+      return oderId == other.oderId;
+    }
+    return false;
   }
 }

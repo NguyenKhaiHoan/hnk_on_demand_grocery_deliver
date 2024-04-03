@@ -6,6 +6,8 @@ import 'package:get_storage/get_storage.dart';
 import 'package:on_demand_grocery_deliver/src/exceptions/firebase_auth_exceptions.dart';
 import 'package:on_demand_grocery_deliver/src/exceptions/firebase_exception.dart';
 import 'package:on_demand_grocery_deliver/src/features/authentication/controller/registration_store_controller.dart';
+import 'package:on_demand_grocery_deliver/src/features/personalization/controllers/user_controller.dart';
+import 'package:on_demand_grocery_deliver/src/features/shop/controllers/initialize_location_controller.dart';
 import 'package:on_demand_grocery_deliver/src/repositories/address_repository.dart';
 import 'package:on_demand_grocery_deliver/src/repositories/delivery_person_repository.dart';
 import 'package:on_demand_grocery_deliver/src/routes/app_pages.dart';
@@ -133,14 +135,15 @@ class AuthenticationRepository extends GetxController {
       });
       if (deliveryPersonIsRegistered) {
         if (user.emailVerified) {
-          HNotificationService.initializeFirebaseCloudMessaging();
-          Get.offAllNamed(HAppRoutes.root);
-          final registrationController = Get.put(RegistrationController());
+          Get.put(InitializeLocationController());
+          final deliveryPersonController = Get.put(DeliveryPersonController());
           final deliveryPersonRepository = Get.put(DeliveryPersonRepository());
           final deliveryPerson =
               await deliveryPersonRepository.getDeliveryPersonInformation();
-          if (!deliveryPerson.isActiveAccount) {
-            Get.toNamed(HAppRoutes.registrationStore);
+          final registrationController = Get.put(RegistrationController());
+          Get.offAllNamed(HAppRoutes.drawer);
+          if (!deliveryPerson.isActiveAccount!) {
+            Get.toNamed(HAppRoutes.registrationDeliveryPerson);
             if (deliveryPerson.vehicleRegistrationNumber == '' ||
                 deliveryPerson.drivingLicenseNumber == '') {
               registrationController.currentStep.value = 0;

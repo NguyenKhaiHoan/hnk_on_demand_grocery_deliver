@@ -6,16 +6,15 @@ class DeliveryPersonModel {
   String email;
   String image;
   String phoneNumber;
-  String vehicleRegistrationNumber;
-  String drivingLicenseNumber;
-  String vehicleRegistrationNumberImage;
-  String drivingLicenseNumberImage;
-  String creationDate;
-  String activeDeliveryRequestId;
+  String? vehicleRegistrationNumber;
+  String? drivingLicenseNumber;
+  String? vehicleRegistrationNumberImage;
+  String? drivingLicenseNumberImage;
+  String? creationDate;
   bool status;
   String cloudMessagingToken;
-  String authenticationBy;
-  bool isActiveAccount;
+  String? authenticationBy;
+  bool? isActiveAccount;
 
   DeliveryPersonModel(
       {required this.id,
@@ -23,16 +22,15 @@ class DeliveryPersonModel {
       required this.image,
       required this.email,
       required this.phoneNumber,
-      required this.vehicleRegistrationNumber,
-      required this.drivingLicenseNumber,
-      required this.vehicleRegistrationNumberImage,
-      required this.drivingLicenseNumberImage,
-      required this.creationDate,
-      required this.activeDeliveryRequestId,
+      this.vehicleRegistrationNumber,
+      this.drivingLicenseNumber,
+      this.vehicleRegistrationNumberImage,
+      this.drivingLicenseNumberImage,
+      this.creationDate,
       required this.status,
       required this.cloudMessagingToken,
-      required this.authenticationBy,
-      required this.isActiveAccount});
+      this.authenticationBy,
+      this.isActiveAccount});
 
   static DeliveryPersonModel empty() => DeliveryPersonModel(
       isActiveAccount: false,
@@ -46,7 +44,6 @@ class DeliveryPersonModel {
       vehicleRegistrationNumberImage: '',
       drivingLicenseNumberImage: '',
       creationDate: '',
-      activeDeliveryRequestId: '',
       status: false,
       cloudMessagingToken: '',
       authenticationBy: '');
@@ -63,7 +60,6 @@ class DeliveryPersonModel {
       'VehicleRegistrationNumberImage': vehicleRegistrationNumberImage,
       'DrivingLicenseNumberImage': drivingLicenseNumberImage,
       'CreationDate': creationDate,
-      'ActiveDeliveryRequestId': activeDeliveryRequestId,
       'Status': status,
       'CloudMessagingToken': cloudMessagingToken,
       'AuthenticationBy': authenticationBy,
@@ -87,7 +83,6 @@ class DeliveryPersonModel {
               data['VehicleRegistrationNumberImage'] ?? '',
           drivingLicenseNumberImage: data['DrivingLicenseNumberImage'] ?? '',
           creationDate: data['CreationDate'] ?? '',
-          activeDeliveryRequestId: data['ActiveDeliveryRequestId'],
           status: data['Status'] ?? false,
           cloudMessagingToken: data['CloudMessagingToken'] ?? '',
           authenticationBy: data['AuthenticationBy'] ?? '',
@@ -98,20 +93,13 @@ class DeliveryPersonModel {
 
   factory DeliveryPersonModel.fromJson(Map<String, dynamic> json) {
     return DeliveryPersonModel(
-        id: json['Id'],
-        name: json['Name'],
-        image: json['Image'],
-        email: json['Email'],
-        phoneNumber: json['PhoneNumber'],
-        vehicleRegistrationNumber: json['VehicleRegistrationNumber'],
-        drivingLicenseNumber: json['DrivingLicenseNumber'],
-        vehicleRegistrationNumberImage: json['VehicleRegistrationNumberImage'],
-        drivingLicenseNumberImage: json['DrivingLicenseNumberImage'],
-        creationDate: json['CreationDate'],
-        activeDeliveryRequestId: json['ActiveDeliveryRequestId'],
-        status: json['Status'] ?? false,
-        cloudMessagingToken: json['CloudMessagingToken'],
-        authenticationBy: json['AuthenticationBy'] ?? '',
-        isActiveAccount: json['IsActiveAccount'] ?? false);
+      id: json['Id'] ?? '',
+      name: json['Name'] ?? '',
+      image: json['Image'] ?? '',
+      email: json['Email'] ?? '',
+      phoneNumber: json['PhoneNumber'] ?? '',
+      status: json['Status'] ?? false,
+      cloudMessagingToken: json['CloudMessagingToken'] ?? '',
+    );
   }
 }

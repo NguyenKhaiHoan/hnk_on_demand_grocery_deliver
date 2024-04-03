@@ -87,6 +87,7 @@ class HFirebaseAuthException implements Exception {
       case 'INVALID_LOGIN_CREDENTIALS':
         return 'Thông tin đăng nhập không hợp lệ.';
       default:
+        print(code);
         return 'Đã xảy ra một lỗi xác thực không mong muốn. Vui lòng thử lại.';
     }
   }

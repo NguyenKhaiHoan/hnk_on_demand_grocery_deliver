@@ -72,7 +72,7 @@ class RegistrationController extends GetxController {
   void checkActiveAccount() async {
     final deliveryPerson =
         await deliveryPersonRepository.getDeliveryPersonInformation();
-    if (deliveryPerson.isActiveAccount) {
+    if (deliveryPerson.isActiveAccount!) {
       Get.back();
     }
   }

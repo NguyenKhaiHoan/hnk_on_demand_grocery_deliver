@@ -8,8 +8,6 @@ class UserAddressModel {
   String district;
   String ward;
   String street;
-  bool selectedAddress;
-  bool isChoseCurrentAddress;
   double latitude;
   double longitude;
 
@@ -21,10 +19,8 @@ class UserAddressModel {
       required this.district,
       required this.ward,
       required this.street,
-      this.selectedAddress = true,
       required this.latitude,
-      required this.longitude,
-      this.isChoseCurrentAddress = true});
+      required this.longitude});
 
   static UserAddressModel empty() => UserAddressModel(
         id: '',
@@ -37,7 +33,7 @@ class UserAddressModel {
         longitude: 0,
       );
 
-  Map<String, dynamic> toJon() {
+  Map<String, dynamic> toJson() {
     return {
       'Name': name,
       'PhoneNumber': phoneNumber,
@@ -45,7 +41,6 @@ class UserAddressModel {
       'District': district,
       'Ward': ward,
       'Street': street,
-      'SelectedAddress': selectedAddress,
       'Latitude': latitude,
       'Longitude': longitude,
     };
@@ -63,7 +58,6 @@ class UserAddressModel {
         district: data['District'] ?? '',
         ward: data['Ward'] ?? '',
         street: data['Street'] ?? '',
-        selectedAddress: data['SelectedAddress'] as bool,
         latitude: double.parse((data['Latitude'] ?? 0.0).toString()),
         longitude: double.parse((data['Longitude'] ?? 0.0).toString()),
       );
@@ -73,17 +67,19 @@ class UserAddressModel {
 
   factory UserAddressModel.fromJson(Map<String, dynamic> json) {
     return UserAddressModel(
-      id: json['id'] ?? '',
-      name: json['name'] ?? '',
-      phoneNumber: json['phoneNumber'] ?? '',
-      city: json['city'] ?? '',
-      district: json['district'] ?? '',
-      ward: json['ward'] ?? '',
-      street: json['street'] ?? '',
-      selectedAddress: json['selectedAddress'] ?? false,
-      isChoseCurrentAddress: json['isChoseCurrentAddress'] ?? false,
-      latitude: json['latitude']?.toDouble() ?? 0.0,
-      longitude: json['longitude']?.toDouble() ?? 0.0,
+      id: json['Id'] ?? '',
+      name: json['Name'] ?? '',
+      phoneNumber: json['PhoneNumber'] ?? '',
+      city: json['City'] ?? '',
+      district: json['District'] ?? '',
+      ward: json['Ward'] ?? '',
+      street: json['Street'] ?? '',
+      latitude: json['Latitude']?.toDouble() ?? 0.0,
+      longitude: json['Longitude']?.toDouble() ?? 0.0,
     );
+  }
+  @override
+  String toString() {
+    return [street, ward, district, city].join(', ');
   }
 }

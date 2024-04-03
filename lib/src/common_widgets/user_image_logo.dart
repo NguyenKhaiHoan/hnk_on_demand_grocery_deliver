@@ -3,7 +3,6 @@ import 'package:image_network/image_network.dart';
 import 'package:on_demand_grocery_deliver/src/common_widgets/custom_shimmer_widget.dart';
 import 'package:on_demand_grocery_deliver/src/constants/app_colors.dart';
 import 'package:on_demand_grocery_deliver/src/features/personalization/controllers/user_controller.dart';
-import 'package:on_demand_grocery_deliver/src/features/shop/controllers/root_controller.dart';
 
 class UserImageLogoWidget extends StatelessWidget {
   UserImageLogoWidget({
@@ -14,7 +13,6 @@ class UserImageLogoWidget extends StatelessWidget {
 
   final bool hasFunction;
   final deliveryPersonController = DeliveryPersonController.instance;
-  final rootController = RootController.instance;
 
   final double size;
 
@@ -25,10 +23,8 @@ class UserImageLogoWidget extends StatelessWidget {
         ? CustomShimmerWidget.circular(width: size, height: size)
         : deliveryPersonController.user.value.image == ''
             ? GestureDetector(
-                onTap: () =>
-                    hasFunction ? rootController.animateToScreen(1) : null,
-                child: Container(
-                  color: HAppColor.hBackgroundColor,
+                onTap: () {},
+                child: SizedBox(
                   width: size,
                   height: size,
                   child: const CircleAvatar(
@@ -53,8 +49,7 @@ class UserImageLogoWidget extends StatelessWidget {
                   Icons.error,
                   color: Colors.red,
                 ),
-                onTap: () =>
-                    hasFunction ? rootController.animateToScreen(1) : null,
+                onTap: () => null,
               );
   }
 }

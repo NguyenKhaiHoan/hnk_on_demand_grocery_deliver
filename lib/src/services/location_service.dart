@@ -1,10 +1,11 @@
 import 'dart:async';
-import 'dart:math';
+import 'dart:developer';
 import 'package:flutter_geofire/flutter_geofire.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:on_demand_grocery_deliver/src/features/personalization/controllers/user_controller.dart';
+import 'package:on_demand_grocery_deliver/src/features/shop/controllers/map_controller.dart';
 import 'package:on_demand_grocery_deliver/src/repositories/authentication_repository.dart';
 import 'package:on_demand_grocery_deliver/src/repositories/delivery_person_repository.dart';
 import 'package:on_demand_grocery_deliver/src/utils/utils.dart';
@@ -63,20 +64,28 @@ class HLocationService {
     if (online) {
       Position currentPosition =
           await HLocationService.getGeoLocationPosition();
-      Geofire.initialize('OnlineDeliveryPersons');
+      Geofire.initialize('DeliveryPersons');
       Geofire.setLocation(AuthenticationRepository.instance.authUser!.uid,
           currentPosition.latitude, currentPosition.longitude);
       await DeliveryPersonRepository.instance
           .updateSingleField({'Status': true});
       DeliveryPersonController.instance.user.value.status == true;
+      DeliveryPersonController.instance.user.refresh();
+      HAppUtils.showSnackBarSuccess(
+          "Bật nhận đơn", 'Bạn đã bật nhận đơn thành công');
     } else {
+      log('Vào đây');
       Geofire.removeLocation(AuthenticationRepository.instance.authUser!.uid);
       await DeliveryPersonRepository.instance
           .updateSingleField({'Status': false});
       DeliveryPersonController.instance.user.value.status == false;
+      DeliveryPersonController.instance.user.refresh();
+      HAppUtils.showSnackBarSuccess(
+          "Đóng nhận đơn", 'Bạn đã đóng nhận đơn thành công');
     }
-    DeliveryPersonController.instance.user.refresh();
   }
+
+  late LocationSettings locationSettings;
 
   static updateLocationRealtime() async {
     LocationPermission permission = await Geolocator.checkPermission();
@@ -89,9 +98,18 @@ class HLocationService {
     );
     StreamSubscription<Position> deliveryPersonPosition =
         Geolocator.getPositionStream(locationSettings: locationSettings)
-            .listen((event) {
-      Geofire.setLocation(AuthenticationRepository.instance.authUser!.uid,
-          event.latitude, event.longitude);
+            .listen((Position? position) {
+      print('vào set');
+      position == null
+          ? print('Đang cập nhật vị trí hiện tại')
+          : {
+              Geofire.initialize('DeliveryPersons'),
+              Geofire.setLocation(
+                  AuthenticationRepository.instance.authUser!.uid,
+                  position.latitude,
+                  position.longitude),
+              MapController.instance.updateRealtimeCurrentPositon(position)
+            };
     });
   }
 }

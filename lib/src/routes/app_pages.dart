@@ -11,7 +11,8 @@ import 'package:on_demand_grocery_deliver/src/features/authentication/views/veri
 import 'package:on_demand_grocery_deliver/src/features/personalization/views/change_name/change_name_screen.dart';
 import 'package:on_demand_grocery_deliver/src/features/personalization/views/change_phone_number/change_phone_screen.dart';
 import 'package:on_demand_grocery_deliver/src/features/personalization/views/no_deliver/no_deliver_screen.dart';
-import 'package:on_demand_grocery_deliver/src/features/shop/views/root/root_screen.dart';
+import 'package:on_demand_grocery_deliver/src/features/shop/views/drawer/drawer_screen.dart';
+import 'package:on_demand_grocery_deliver/src/features/shop/views/order/order_detail_screen.dart';
 
 abstract class HAppPages {
   static final pages = [
@@ -23,8 +24,8 @@ abstract class HAppPages {
       transition: Transition.rightToLeftWithFade,
     ),
     GetPage(
-      name: HAppRoutes.root,
-      page: () => const RootScreen(),
+      name: HAppRoutes.drawer,
+      page: () => const DrawerScreen(),
       transitionDuration: const Duration(milliseconds: 500),
       curve: Curves.easeOut,
       transition: Transition.fadeIn,
@@ -86,8 +87,15 @@ abstract class HAppPages {
       transition: Transition.rightToLeftWithFade,
     ),
     GetPage(
-      name: HAppRoutes.registrationStore,
-      page: () => const RegistrationStoreScreen(),
+      name: HAppRoutes.registrationDeliveryPerson,
+      page: () => const RegistrationDeliveryPersonScreen(),
+      transitionDuration: const Duration(milliseconds: 500),
+      curve: Curves.easeOut,
+      transition: Transition.rightToLeftWithFade,
+    ),
+    GetPage(
+      name: HAppRoutes.orderDetail,
+      page: () => OrderDetailScreen(),
       transitionDuration: const Duration(milliseconds: 500),
       curve: Curves.easeOut,
       transition: Transition.rightToLeftWithFade,
@@ -104,7 +112,7 @@ abstract class HAppPages {
 
 abstract class HAppRoutes {
   static const onboarding = '/onboarding';
-  static const root = '/root';
+  static const drawer = '/drawer';
   static const login = '/login';
   static const verify = '/verify';
   static const complete = '/complete';
@@ -117,5 +125,6 @@ abstract class HAppRoutes {
   static const changePhone = '/changePhone';
   static const noDeliver = '/noDeliver';
   static const completeAccount = '/completeAccount';
-  static const registrationStore = '/registrationStore';
+  static const registrationDeliveryPerson = '/registrationDeliveryPerson';
+  static const orderDetail = '/orderDetail';
 }

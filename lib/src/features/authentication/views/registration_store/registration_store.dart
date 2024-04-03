@@ -12,15 +12,16 @@ import 'package:on_demand_grocery_deliver/src/features/personalization/controlle
 import 'package:on_demand_grocery_deliver/src/utils/theme/app_style.dart';
 import 'package:on_demand_grocery_deliver/src/utils/utils.dart';
 
-class RegistrationStoreScreen extends StatefulWidget {
-  const RegistrationStoreScreen({super.key});
+class RegistrationDeliveryPersonScreen extends StatefulWidget {
+  const RegistrationDeliveryPersonScreen({super.key});
 
   @override
-  State<RegistrationStoreScreen> createState() =>
-      _RegistrationStoreScreenState();
+  State<RegistrationDeliveryPersonScreen> createState() =>
+      _RegistrationDeliveryPersonScreenState();
 }
 
-class _RegistrationStoreScreenState extends State<RegistrationStoreScreen> {
+class _RegistrationDeliveryPersonScreenState
+    extends State<RegistrationDeliveryPersonScreen> {
   final registrationController = Get.put(RegistrationController());
 
   final double storeBackgroundHeight = 200;
@@ -302,7 +303,7 @@ class _RegistrationStoreScreenState extends State<RegistrationStoreScreen> {
                                                         deliveryPersonController
                                                             .user
                                                             .value
-                                                            .drivingLicenseNumberImage,
+                                                            .drivingLicenseNumberImage!,
                                                         height:
                                                             storeBackgroundHeight,
                                                         width: HAppSize
@@ -386,7 +387,7 @@ class _RegistrationStoreScreenState extends State<RegistrationStoreScreen> {
                                                         deliveryPersonController
                                                             .user
                                                             .value
-                                                            .vehicleRegistrationNumberImage,
+                                                            .vehicleRegistrationNumberImage!,
                                                         height:
                                                             storeBackgroundHeight,
                                                         width: HAppSize

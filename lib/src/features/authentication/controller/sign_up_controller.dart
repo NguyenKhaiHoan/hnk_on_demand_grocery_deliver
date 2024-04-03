@@ -60,7 +60,6 @@ class SignUpController extends GetxController {
           creationDate: DateFormat('EEEE, d-M-y', 'vi').format(DateTime.now()),
           authenticationBy: 'Email',
           isActiveAccount: false,
-          activeDeliveryRequestId: '',
           status: false,
           cloudMessagingToken: '');
 

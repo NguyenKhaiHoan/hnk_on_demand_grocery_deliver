@@ -40,6 +40,12 @@ class DeliveryPersonController extends GetxController {
       .obs;
   var isSetAddressDeliveryTo = false.obs;
 
+  @override
+  void onInit() {
+    fetchUserRecord();
+    super.onInit();
+  }
+
   Future<void> saveUserRecord(
       UserCredential? userCredential, String authenticationBy) async {
     try {
@@ -60,7 +66,6 @@ class DeliveryPersonController extends GetxController {
               isActiveAccount: false,
               vehicleRegistrationNumberImage: '',
               drivingLicenseNumberImage: '',
-              activeDeliveryRequestId: '',
               status: false,
               cloudMessagingToken: '');
 

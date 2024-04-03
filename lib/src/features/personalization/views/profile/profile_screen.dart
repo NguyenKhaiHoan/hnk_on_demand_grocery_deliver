@@ -5,7 +5,6 @@ import 'package:on_demand_grocery_deliver/src/common_widgets/user_image_logo.dar
 import 'package:on_demand_grocery_deliver/src/constants/app_colors.dart';
 import 'package:on_demand_grocery_deliver/src/constants/app_sizes.dart';
 import 'package:on_demand_grocery_deliver/src/features/personalization/controllers/user_controller.dart';
-import 'package:on_demand_grocery_deliver/src/features/shop/controllers/root_controller.dart';
 import 'package:on_demand_grocery_deliver/src/repositories/authentication_repository.dart';
 import 'package:on_demand_grocery_deliver/src/routes/app_pages.dart';
 import 'package:on_demand_grocery_deliver/src/utils/theme/app_style.dart';
@@ -194,7 +193,6 @@ class _ProfileScreenState extends State<ProfileScreen>
                 child: GestureDetector(
                   onTap: () {
                     AuthenticationRepository.instance.logOut();
-                    RootController.instance.animateToScreen(0);
                   },
                   child: const Text('Đăng xuất'),
                 ),

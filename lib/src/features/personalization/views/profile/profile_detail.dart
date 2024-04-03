@@ -89,7 +89,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                       function: () {
                         Get.toNamed(HAppRoutes.changeName);
                       },
-                      title2: deliveryPersonController.user.value.name!,
+                      title2: deliveryPersonController.user.value.name,
                       isSubLoading: changeNameController.isLoading.value,
                     )),
                 gapH6,
@@ -100,7 +100,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                 SectionProfileWidget(
                   title: 'Id',
                   showIcon: true,
-                  title2: deliveryPersonController.user.value.id!,
+                  title2: deliveryPersonController.user.value.id,
                   isSubLoading: false,
                 ),
                 gapH6,
@@ -114,7 +114,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                       function: () {
                         Get.toNamed(HAppRoutes.changePhone);
                       },
-                      title2: deliveryPersonController.user.value.phoneNumber!,
+                      title2: deliveryPersonController.user.value.phoneNumber,
                       isSubLoading: changePhoneController.isLoading.value,
                     )),
                 gapH6,
@@ -125,7 +125,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                 SectionProfileWidget(
                   title: 'Email',
                   showIcon: false,
-                  title2: deliveryPersonController.user.value.email!,
+                  title2: deliveryPersonController.user.value.email,
                   isSubLoading: false,
                 ),
                 gapH6,
