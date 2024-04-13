@@ -109,6 +109,9 @@ dependencies:
   uuid: ^4.3.3
   flutter_chat_ui: ^1.6.12
   flutter_chat_types: ^3.6.2
+  mobile_scanner: ^4.0.1
+  rounded_background_text: ^0.5.0
+  flutter_osm_plugin: ^0.70.4
 
 dev_dependencies:
   flutter_test:

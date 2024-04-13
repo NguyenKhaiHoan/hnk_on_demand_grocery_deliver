@@ -33,6 +33,7 @@ class HNotificationService {
   final FirebaseMessaging _fcm = FirebaseMessaging.instance;
 
   final deliveryPersonRepository = Get.put(DeliveryPersonRepository());
+  final mapController = Get.put(MapController());
 
   Future<void> init(BuildContext context) async {
     NotificationSettings settings = await _fcm.requestPermission(
@@ -63,10 +64,8 @@ class HNotificationService {
         if (message.notification!.title != null &&
             message.notification!.body != null) {
           final notificationData = message.data;
-          if (MapController.instance.deliveryProcess.value.activeOrderId ==
-                  null ||
-              MapController.instance.deliveryProcess.value.activeOrderId ==
-                  '') {
+          if (mapController.deliveryProcess.value.activeOrderId == null ||
+              mapController.deliveryProcess.value.activeOrderId == '') {
             OrderModel orderData =
                 OrderModel.fromJson(json.decode(notificationData['order']));
 

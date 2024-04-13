@@ -4,6 +4,7 @@ import 'dart:developer';
 import 'package:eva_icons_flutter/eva_icons_flutter.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:on_demand_grocery_deliver/src/constants/app_colors.dart';
@@ -11,6 +12,7 @@ import 'package:on_demand_grocery_deliver/src/constants/app_sizes.dart';
 import 'package:on_demand_grocery_deliver/src/features/shop/controllers/order_controller.dart';
 import 'package:on_demand_grocery_deliver/src/features/shop/models/order_model.dart';
 import 'package:on_demand_grocery_deliver/src/features/shop/models/product_in_cart_model.dart';
+import 'package:on_demand_grocery_deliver/src/features/shop/views/order/scan_qr_code.dart';
 import 'package:on_demand_grocery_deliver/src/utils/theme/app_style.dart';
 import 'package:on_demand_grocery_deliver/src/utils/utils.dart';
 
@@ -25,12 +27,14 @@ class ShowAllProductInStore extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    orderController.checkProduct.value =
-        order.storeOrders[index].isCheckFullProduct == 1
-            ? 1
-            : order.storeOrders[index].isCheckFullProduct == -1
-                ? -1
-                : 0;
+    Future.delayed(Duration.zero).then((value) {
+      orderController.checkProduct.value =
+          order.storeOrders[index].isCheckFullProduct == 1
+              ? 1
+              : order.storeOrders[index].isCheckFullProduct == -1
+                  ? -1
+                  : 0;
+    });
     return Scaffold(
         appBar: AppBar(
           toolbarHeight: 80,
@@ -86,6 +90,46 @@ class ShowAllProductInStore extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10)),
                 child: Column(children: [
                   SectionWidget(
+                      title: 'Quét mã',
+                      hasIcon: true,
+                      icon: GestureDetector(
+                        onTap: () async {
+                          // orderController.checkQrListStore[index] = true;
+                          if (!orderController.checkQrListStore[index]) {
+                            print(
+                                'Kiểm tra mã Qr: ${orderController.checkQrListStore[index]}');
+                            HAppUtils.loadingOverlays();
+                            Position currentPosition =
+                                await HAppUtils.getGeoLocationPosition();
+                            final distance = HAppUtils.calculateDistance(
+                                currentPosition.latitude,
+                                currentPosition.longitude,
+                                order.storeOrders[index].latitude,
+                                order.storeOrders[index].longitude);
+                            print('Khoảng cách: $distance');
+                            HAppUtils.stopLoading();
+                            if (distance < 50) {
+                              Get.to(() => ScanQrCodeScreen(), arguments: {
+                                'orderId': order.oderId,
+                                'index': index
+                              });
+                            } else {
+                              HAppUtils.showSnackBarWarning('Không đúng vị trí',
+                                  'Có vẻ khoảng cách từ vị trí hiện tại của bạn với vị trí cửa hàng còn khá xa');
+                            }
+                          }
+                        },
+                        child: const Icon(
+                          Icons.qr_code_scanner_rounded,
+                          size: 18,
+                        ),
+                      )),
+                  gapH6,
+                  Divider(
+                    color: HAppColor.hGreyColorShade300,
+                  ),
+                  gapH6,
+                  SectionWidget(
                     title: 'Số lượng',
                     title2: order.orderProducts
                         .where((e) =>
@@ -95,7 +139,6 @@ class ShowAllProductInStore extends StatelessWidget {
                             (previousValue, element) =>
                                 previousValue + element.quantity)
                         .toString(),
-                    down: false,
                   ),
                   gapH6,
                   Divider(
@@ -109,7 +152,6 @@ class ShowAllProductInStore extends StatelessWidget {
                             : orderController.checkProduct.value == -1
                                 ? 'Thiếu hàng hóa'
                                 : 'Đầy đủ',
-                        down: false,
                       )),
                 ]),
               ),
@@ -135,68 +177,83 @@ class ShowAllProductInStore extends StatelessWidget {
             ],
           ),
         )),
-        bottomNavigationBar: Obx(() => Container(
-              padding: const EdgeInsets.fromLTRB(hAppDefaultPadding,
-                  hAppDefaultPadding, hAppDefaultPadding, hAppDefaultPadding),
-              decoration: BoxDecoration(
-                color: HAppColor.hBackgroundColor,
-                boxShadow: [
-                  BoxShadow(
-                    offset: const Offset(0, -15),
-                    blurRadius: 20,
-                    color: const Color.fromARGB(255, 0, 0, 0).withOpacity(0.1),
-                  )
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
+        bottomNavigationBar: Container(
+          padding: const EdgeInsets.fromLTRB(hAppDefaultPadding,
+              hAppDefaultPadding, hAppDefaultPadding, hAppDefaultPadding),
+          decoration: BoxDecoration(
+            color: HAppColor.hBackgroundColor,
+            boxShadow: [
+              BoxShadow(
+                offset: const Offset(0, -15),
+                blurRadius: 20,
+                color: const Color.fromARGB(255, 0, 0, 0).withOpacity(0.1),
+              )
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Text.rich(TextSpan(
-                            text: 'Số lượng: ',
-                            style: HAppStyle.paragraph2Regular
-                                .copyWith(color: HAppColor.hGreyColorShade600),
-                            children: [
-                              TextSpan(
-                                  text: order.orderProducts
-                                      .where((e) =>
-                                          e.storeId ==
-                                          order.storeOrders[index].storeId)
-                                      .fold(
-                                          0,
-                                          (previousValue, element) =>
-                                              previousValue + element.quantity)
-                                      .toString()
-                                      .toString(),
-                                  style: HAppStyle.label2Bold
-                                      .copyWith(color: HAppColor.hDarkColor))
-                            ])),
-                      ),
-                      TextButton(
-                          onPressed: () {
-                            orderController.checkProduct.value = -1;
-                          },
-                          child: Text(
-                            'Thiếu hàng',
-                            style: HAppStyle.paragraph2Regular.copyWith(
-                              color: HAppColor.hRedColor,
-                              decoration: TextDecoration.underline,
-                            ),
-                          )),
-                      gapW10,
-                      Expanded(
-                          child: ElevatedButton(
-                        onPressed: () async {
-                          orderController.checkProduct.value = 1;
+                  Expanded(
+                    child: Text.rich(TextSpan(
+                        text: 'Số lượng: ',
+                        style: HAppStyle.paragraph2Regular
+                            .copyWith(color: HAppColor.hGreyColorShade600),
+                        children: [
+                          TextSpan(
+                              text: order.orderProducts
+                                  .where((e) =>
+                                      e.storeId ==
+                                      order.storeOrders[index].storeId)
+                                  .fold(
+                                      0,
+                                      (previousValue, element) =>
+                                          previousValue + element.quantity)
+                                  .toString()
+                                  .toString(),
+                              style: HAppStyle.label2Bold
+                                  .copyWith(color: HAppColor.hDarkColor))
+                        ])),
+                  ),
+                  TextButton(
+                      onPressed: () async {
+                        if (orderController.checkQrListStore[index]) {
+                          orderController.checkProduct.value = -1;
                           var ref = FirebaseDatabase.instance.ref(
                               "Orders/${order.oderId}/StoreOrders/$index/");
                           await ref.update({
-                            "IsCheckFullProduct": 1,
+                            "IsCheckFullProduct": -1,
                           });
+                        } else {
+                          HAppUtils.showSnackBarWarning('Cảnh báo',
+                              'Hãy quét mã Qr trước khi kiểm tra hàng');
+                        }
+                      },
+                      child: Text(
+                        'Thiếu hàng',
+                        style: HAppStyle.paragraph2Regular.copyWith(
+                          color: HAppColor.hRedColor,
+                          decoration: TextDecoration.underline,
+                        ),
+                      )),
+                  gapW10,
+                  Obx(() => Expanded(
+                          child: ElevatedButton(
+                        onPressed: () async {
+                          if (orderController.checkQrListStore[index]) {
+                            orderController.checkProduct.value = 1;
+                            var ref = FirebaseDatabase.instance.ref(
+                                "Orders/${order.oderId}/StoreOrders/$index/");
+                            await ref.update({
+                              "IsCheckFullProduct": 1,
+                            });
+                          } else {
+                            HAppUtils.showSnackBarWarning('Cảnh báo',
+                                'Hãy quét mã Qr trước khi kiểm tra hàng');
+                          }
                         },
                         style: ElevatedButton.styleFrom(
                           maximumSize: Size(HAppSize.deviceWidth * 0.5, 50),
@@ -209,12 +266,12 @@ class ShowAllProductInStore extends StatelessWidget {
                             : Text("Kiểm tra",
                                 style: HAppStyle.label2Bold
                                     .copyWith(color: HAppColor.hWhiteColor)),
-                      )),
-                    ],
-                  ),
+                      ))),
                 ],
               ),
-            )));
+            ],
+          ),
+        ));
   }
 }
 
@@ -223,58 +280,42 @@ class SectionWidget extends StatelessWidget {
     super.key,
     required this.title,
     this.title2,
-    required this.down,
+    this.hasIcon = false,
+    this.icon,
   });
 
   final String? title2;
   final String title;
-  final bool down;
+  final bool hasIcon;
+  final Widget? icon;
 
   @override
   Widget build(BuildContext context) {
-    return down
-        ? Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: HAppStyle.paragraph2Bold
-                    .copyWith(color: HAppColor.hGreyColorShade600),
-              ),
-              gapH6,
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  title2! == '' ? 'Không có ghi chú' : title2!,
-                  style: HAppStyle.paragraph2Regular,
-                  textAlign: TextAlign.right,
-                ),
-              )
-            ],
-          )
-        : Row(
-            children: [
-              Expanded(
-                flex: 3,
-                child: Text(
-                  title,
-                  style: HAppStyle.paragraph2Bold
-                      .copyWith(color: HAppColor.hGreyColorShade600),
-                ),
-              ),
-              Expanded(
-                flex: 4,
-                child: Align(
-                  alignment: Alignment.centerRight,
-                  child: Text(
+    return Row(
+      children: [
+        Expanded(
+          flex: 3,
+          child: Text(
+            title,
+            style: HAppStyle.paragraph2Bold
+                .copyWith(color: HAppColor.hGreyColorShade600),
+          ),
+        ),
+        Expanded(
+          flex: 4,
+          child: Align(
+            alignment: Alignment.centerRight,
+            child: hasIcon
+                ? icon!
+                : Text(
                     title2!,
                     style: HAppStyle.paragraph2Regular,
                     textAlign: TextAlign.right,
                   ),
-                ),
-              ),
-            ],
-          );
+          ),
+        ),
+      ],
+    );
   }
 }
 

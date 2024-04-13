@@ -74,7 +74,6 @@ class HLocationService {
       HAppUtils.showSnackBarSuccess(
           "Bật nhận đơn", 'Bạn đã bật nhận đơn thành công');
     } else {
-      log('Vào đây');
       Geofire.removeLocation(AuthenticationRepository.instance.authUser!.uid);
       await DeliveryPersonRepository.instance
           .updateSingleField({'Status': false});
@@ -99,7 +98,6 @@ class HLocationService {
     StreamSubscription<Position> deliveryPersonPosition =
         Geolocator.getPositionStream(locationSettings: locationSettings)
             .listen((Position? position) {
-      print('vào set');
       position == null
           ? print('Đang cập nhật vị trí hiện tại')
           : {

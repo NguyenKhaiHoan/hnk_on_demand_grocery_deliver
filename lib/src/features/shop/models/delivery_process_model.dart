@@ -22,6 +22,5 @@ class DeliveryProcessModel {
     };
   }
 
-  static DeliveryProcessModel empty() =>
-      DeliveryProcessModel(g: '', l: [], activeOrderId: '');
+  static DeliveryProcessModel empty() => DeliveryProcessModel(g: '', l: []);
 }

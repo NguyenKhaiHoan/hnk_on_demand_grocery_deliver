@@ -52,7 +52,7 @@ class OrderNotificationWidget extends StatelessWidget {
                         color: HAppColor.hRedColor,
                       ),
                       child: Text(
-                        'Hỏa tốc',
+                        'Tiêu chuẩn',
                         style: HAppStyle.paragraph3Regular
                             .copyWith(color: HAppColor.hWhiteColor),
                       ),
@@ -124,7 +124,6 @@ class OrderNotificationWidget extends StatelessWidget {
               Expanded(
                 child: ElevatedButton(
                   onPressed: () {
-                    HAppUtils.loadingOverlays();
                     final List<int> listNumberOfCart = [];
                     final List<int> listTotalPrice = [];
                     for (int i = 0; i < order.storeOrders.length; i++) {
@@ -143,7 +142,6 @@ class OrderNotificationWidget extends StatelessWidget {
                     }
                     final List<String> listAddressStore =
                         order.storeOrders.map((e) => e.address).toList();
-                    HAppUtils.stopLoading();
                     Get.toNamed(HAppRoutes.orderDetail, arguments: {
                       'orderId': order.oderId,
                       'listNumberOfCart': listNumberOfCart,
@@ -164,7 +162,9 @@ class OrderNotificationWidget extends StatelessWidget {
               ),
               TextButton(
                   onPressed: () {
-                    timerController.removeOrder();
+                    timerController.stopTimmer();
+                    timerController
+                        .removeOrderAndDeleteController(order.oderId);
                   },
                   child: Text("Từ chối",
                       style: HAppStyle.label2Bold

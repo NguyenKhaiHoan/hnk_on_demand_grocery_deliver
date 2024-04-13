@@ -33,7 +33,7 @@ class OrderController extends GetxController {
     listOrder.addIf(!listOrder.contains(order), order);
   }
 
-  removeOrder(String id) {
+  removeOrderNotification(String id) {
     listOrder.removeWhere((element) => element.oderId == id);
   }
 
@@ -88,59 +88,55 @@ class OrderController extends GetxController {
       HAppUtils.loadingOverlaysAddress();
       Position currentPosition =
           await HLocationService.getGeoLocationPosition();
-      String destinationLocation = '&waypoints=';
-        List<StoreOrderModel> storeOrders = order.storeOrders;
-        String id = nearbyStoreId.value;
-        StoreOrderModel nearbyStoreLocation =
-            storeOrders.where((e) => e.storeId == id).toList().first;
-        if (storeOrders.length > 1) {
-          for (int i = 0; i < storeOrders.length; i++) {
-            if (storeOrders[i].latitude != nearbyStoreLocation.latitude &&
-                storeOrders[i].longitude != nearbyStoreLocation.longitude) {
-              destinationLocation +=
-                  '${storeOrders[i].latitude},${storeOrders[i].longitude}|';
-            }
-          }
-        }
-        destinationLocation +=
-            '${userAddress.latitude},${userAddress.longitude}';
-        String urlString =
-            'https://www.google.com/maps/dir/?api=1&origin=${currentPosition.latitude},${currentPosition.longitude}&destination=${nearbyStoreLocation.latitude},${nearbyStoreLocation.longitude}$destinationLocation&travelmode=driving&dir_action=navigate';
+      String waypoints = '&waypoints=';
+      List<StoreOrderModel> storeOrders = order.storeOrders;
+      for (int i = 0; i < storeOrders.length; i++) {
+        waypoints += '${storeOrders[i].latitude},${storeOrders[i].longitude}|';
+      }
 
-        final url = Uri.parse(
-          urlString,
-        );
-        if (await canLaunchUrl(url)) {
-          HAppUtils.stopLoading();
-          await launchUrl(url, mode: LaunchMode.inAppBrowserView);
-        } else {
-          HAppUtils.stopLoading();
-          HAppUtils.showSnackBarError("Lỗi", 'Không thể mở được Google Map');
-          throw Exception('Could not launch $url');
-        }
-        print(urlString);
+      if (waypoints.isNotEmpty) {
+        waypoints.substring(0, waypoints.length - 1);
+      }
+
+      String urlString =
+          'https://www.google.com/maps/dir/?api=1&origin=${currentPosition.latitude},${currentPosition.longitude}&destination=${userAddress.latitude},${userAddress.longitude}$waypoints&travelmode=driving&dir_action=navigate';
+
+      final url = Uri.parse(
+        urlString,
+      );
+      if (await canLaunchUrl(url)) {
+        HAppUtils.stopLoading();
+        await launchUrl(url, mode: LaunchMode.inAppBrowserView);
+      } else {
+        HAppUtils.stopLoading();
+        HAppUtils.showSnackBarError("Lỗi", 'Không thể mở được Google Map');
+        throw Exception('Could not launch $url');
+      }
+      print(urlString);
     } catch (e) {
       HAppUtils.showSnackBarError('Lỗi', 'Không tìm được vị trí');
     }
   }
+
+  var checkQrListStore = <bool>[].obs;
 
   Future<void> processOrder(OrderModel order, String userFcmToken) async {
     if (acceptOrder.value == 0) {
       acceptOrder.value = 1;
       for (int i = 0; i < listOrder.length; i++) {
         final timerController =
-            Get.put(TimerController(order.oderId), tag: order.oderId);
-        timerController.removeOrder();
+            Get.find<TimerController>(tag: listOrder[i].oderId);
+        timerController.stopTimmer();
+        if (listOrder[i].oderId != order.oderId) {
+          timerController.removeOrderAndDeleteController(listOrder[i].oderId);
+        }
       }
       listOrder.clear();
-      listOrder.refresh();
       var ref = FirebaseDatabase.instance.ref("Orders/${order.oderId}");
       await ref.update({
         "OrderStatus": HAppUtils.orderStatus(2),
-      });
-
-      await ref.update({
         "DeliveryPerson": DeliveryPersonController.instance.user.value.toJson(),
+        "DeliveryPersonId": DeliveryPersonController.instance.user.value.id
       });
 
       var ref2 = FirebaseDatabase.instance.ref(
@@ -152,6 +148,9 @@ class OrderController extends GetxController {
       MapController.instance.deliveryProcess.refresh();
 
       HNotificationService.sendNotificationToUser(userFcmToken);
+
+      checkQrListStore.value =
+          List<bool>.filled(order.storeOrders.length, false);
     } else if (acceptOrder.value == 1) {
       if (order.orderStatus == HAppUtils.orderStatus(2)) {
         bool checkAllProduct = true;
@@ -170,11 +169,27 @@ class OrderController extends GetxController {
           });
         }
       } else if (order.orderStatus == HAppUtils.orderStatus(3)) {
-        var ref = FirebaseDatabase.instance.ref("Orders/${order.oderId}");
-        await ref.update({
-          "OrderStatus": HAppUtils.orderStatus(4),
-        });
-        HNotificationService.sendNotificationToUserComplete(userFcmToken);
+        Position currentPosition = await HAppUtils.getGeoLocationPosition();
+        final distance = HAppUtils.calculateDistance(
+            currentPosition.latitude,
+            currentPosition.longitude,
+            order.orderUserAddress.latitude,
+            order.orderUserAddress.longitude);
+        if (distance < 50) {
+          var ref = FirebaseDatabase.instance.ref("Orders/${order.oderId}");
+          await ref.update({
+            "OrderStatus": HAppUtils.orderStatus(4),
+          });
+          HNotificationService.sendNotificationToUserComplete(userFcmToken);
+          await FirebaseDatabase.instance
+              .ref(
+                  "DeliveryPersons/${DeliveryPersonController.instance.user.value.id}/ActiveOrderId")
+              .remove();
+          MapController.instance.deliveryProcess.value.activeOrderId ?? '';
+        } else {
+          HAppUtils.showSnackBarWarning('Không đúng vị trí',
+              'Có vẻ khoảng cách từ vị trí hiện tại của bạn với vị trí cửa khách hàng còn khá xa');
+        }
       }
     }
   }

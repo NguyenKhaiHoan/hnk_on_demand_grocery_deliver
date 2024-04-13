@@ -25,8 +25,12 @@ import 'package:on_demand_grocery_deliver/src/features/shop/models/order_model.d
 import 'package:on_demand_grocery_deliver/src/features/shop/models/product_in_cart_model.dart';
 import 'package:on_demand_grocery_deliver/src/features/shop/models/store_order_model.dart';
 import 'package:on_demand_grocery_deliver/src/features/shop/models/user_address_model.dart';
+import 'package:on_demand_grocery_deliver/src/features/shop/views/live_tracking_screen.dart/live_tracking_screen.dart';
 import 'package:on_demand_grocery_deliver/src/features/shop/views/order/chat_order.dart';
 import 'package:on_demand_grocery_deliver/src/features/shop/views/order/show_all_product_in_store.dart';
+import 'package:on_demand_grocery_deliver/src/repositories/authentication_repository.dart';
+import 'package:on_demand_grocery_deliver/src/repositories/delivery_person_repository.dart';
+import 'package:on_demand_grocery_deliver/src/services/location_service.dart';
 import 'package:on_demand_grocery_deliver/src/utils/theme/app_style.dart';
 import 'package:on_demand_grocery_deliver/src/utils/utils.dart';
 
@@ -47,22 +51,24 @@ class OrderDetailScreen extends StatelessWidget {
       stream: FirebaseDatabase.instance.ref().child('Orders/$orderId').onValue,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
-            child:
-                CircularProgressIndicator(color: HAppColor.hBluePrimaryColor),
-          );
-        }
-        if (snapshot.hasError) {
-          return const Center(
-            child: Text('Lỗi, không thể tải dữ liệu'),
+          return const Scaffold(
+            body: Center(
+              child:
+                  CircularProgressIndicator(color: HAppColor.hBluePrimaryColor),
+            ),
           );
         }
 
-        if (!snapshot.hasData || snapshot.data!.snapshot.value == null) {
-          return const Center(
-            child: Text('Lỗi, không có dữ liệu để hiển thị'),
-          );
+        if (snapshot.hasError) {
+          Get.back();
+          return const SizedBox();
         }
+
+        if (!snapshot.hasData || snapshot.data!.snapshot.value == null) {
+          Get.back();
+          return const SizedBox();
+        }
+
         OrderModel order = OrderModel.fromJson(
             jsonDecode(jsonEncode(snapshot.data!.snapshot.value))
                 as Map<String, dynamic>);
@@ -157,8 +163,81 @@ class OrderDetailScreen extends StatelessWidget {
                         actions: [
                           GestureDetector(
                             onTap: () {
-                              orderController.openGoogleMaps(
-                                  order.orderUserAddress, order);
+                              showModalBottomSheet(
+                                  context: Get.overlayContext!,
+                                  backgroundColor: HAppColor.hBackgroundColor,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  builder: (BuildContext context) {
+                                    return Container(
+                                      padding: EdgeInsets.only(
+                                          bottom: MediaQuery.of(context)
+                                              .viewInsets
+                                              .bottom),
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(
+                                            hAppDefaultPadding),
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
+                                              children: [
+                                                const Text(
+                                                  'Đường đi',
+                                                  style:
+                                                      HAppStyle.heading4Style,
+                                                ),
+                                                GestureDetector(
+                                                  onTap: () {
+                                                    Get.back();
+                                                  },
+                                                  child: const Icon(
+                                                      EvaIcons.close),
+                                                )
+                                              ],
+                                            ),
+                                            Divider(
+                                              color:
+                                                  HAppColor.hGreyColorShade300,
+                                            ),
+                                            gapH12,
+                                            GestureDetector(
+                                                onTap: () {
+                                                  orderController
+                                                      .openGoogleMaps(
+                                                          order
+                                                              .orderUserAddress,
+                                                          order);
+                                                },
+                                                child: const Text(
+                                                    'Mở bằng Google Map')),
+                                            gapH12,
+                                            GestureDetector(
+                                                onTap: () async {
+                                                  Get.to(
+                                                      () =>
+                                                          const LiveTrackingScreen(),
+                                                      arguments: {
+                                                        'orderId': order.oderId,
+                                                        'deliveryPersonId':
+                                                            order
+                                                                .deliveryPerson!
+                                                                .id,
+                                                      });
+                                                },
+                                                child: const Text(
+                                                    'Mở bằng Open Street Map'))
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  });
                             },
                             child: const Icon(
                               EvaIcons.navigation2Outline,
@@ -223,15 +302,31 @@ class OrderDetailScreen extends StatelessWidget {
                         gapH6,
                         SectionWidget(
                           title: 'Tổng trả',
-                          title2: HAppUtils.vietNamCurrencyFormatting(order
-                              .orderProducts
-                              .where((element) =>
-                                  element.storeId ==
-                                  order.storeOrders[i].storeId)
-                              .fold(
-                                  0,
-                                  (previous, current) =>
-                                      previous + current.price!)),
+                          title2: order.paymentStatus == 'Đã thanh toán'
+                              ? '0₫'
+                              : order.voucher != null
+                                  ? HAppUtils.vietNamCurrencyFormatting(order
+                                          .orderProducts
+                                          .where((element) =>
+                                              element.storeId ==
+                                              order.storeOrders[i].storeId)
+                                          .map((product) =>
+                                              product.price! * product.quantity)
+                                          .fold(
+                                              0,
+                                              (previous, current) =>
+                                                  previous + current) -
+                                      (order.voucher!.storeId != ''
+                                          ? (order.voucher!.storeId ==
+                                                  order.storeOrders[i].storeId
+                                              ? order.discount
+                                              : 0)
+                                          : 0))
+                                  : HAppUtils.vietNamCurrencyFormatting(order
+                                      .orderProducts
+                                      .where((element) => element.storeId == order.storeOrders[i].storeId)
+                                      .map((product) => product.price! * product.quantity)
+                                      .fold(0, (previous, current) => previous + current)),
                           down: false,
                         ),
                         gapH6,
@@ -252,7 +347,12 @@ class OrderDetailScreen extends StatelessWidget {
                             GestureDetector(
                               onTap: () => Get.to(
                                   const ChatOrderRealtimeScreen(),
-                                  arguments: {'orderId': orderId}),
+                                  arguments: {
+                                    'orderId': order.oderId,
+                                    'anotherId': AuthenticationRepository
+                                        .instance.authUser!.uid,
+                                    'otherId': order.storeOrders[i].storeId
+                                  }),
                               child: const Icon(
                                 EvaIcons.messageSquareOutline,
                                 size: 18,
@@ -283,6 +383,7 @@ class OrderDetailScreen extends StatelessWidget {
                         title: 'Địa chỉ',
                         down: true,
                         userAddress: order.orderUserAddress,
+                        order: order,
                       ),
                       gapH6,
                       Divider(
@@ -291,8 +392,9 @@ class OrderDetailScreen extends StatelessWidget {
                       gapH6,
                       SectionWidget(
                         title: 'Tổng thu',
-                        title2:
-                            HAppUtils.vietNamCurrencyFormatting(order.price),
+                        title2: order.orderStatus == 'Đã thanh toán'
+                            ? '0₫'
+                            : HAppUtils.vietNamCurrencyFormatting(order.price),
                         down: false,
                       ),
                     ]),
@@ -319,6 +421,7 @@ class OrderDetailScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   SwipeButton.expand(
+                    enabled: order.activeStep == 4 ? false : true,
                     thumb: const Icon(
                       EvaIcons.arrowIosForwardOutline,
                       color: Colors.white,
@@ -331,10 +434,12 @@ class OrderDetailScreen extends StatelessWidget {
                     },
                     child: Obx(() => Text(
                           orderController.acceptOrder.value == 1
-                              ? orderController.acceptOrder.value == 1 &&
-                                      orderController.checkProduct.value == 0
-                                  ? "Vuốt để xác nhận đã lấy hàng"
-                                  : 'Vuốt để xác nhận đã đến điểm giao'
+                              ? order.orderStatus == HAppUtils.orderStatus(2)
+                                  ? 'Vuốt để xác nhận đã lấy hàng'
+                                  : order.orderStatus ==
+                                          HAppUtils.orderStatus(3)
+                                      ? 'Vuốt để xác nhận đã đến điểm giao'
+                                      : 'Đã giao xong'
                               : "Vuốt để xác nhận đơn hàng (${timerController.timeLeft})",
                           style: HAppStyle.paragraph2Bold
                               .copyWith(color: HAppColor.hWhiteColor),
@@ -390,7 +495,34 @@ class SectionWidget extends StatelessWidget {
                               userAddress!.name,
                               style: HAppStyle.heading5Style,
                             ),
-                            Text(userAddress!.phoneNumber),
+                            Row(
+                              children: [
+                                Text(userAddress!.phoneNumber),
+                                const Spacer(),
+                                GestureDetector(
+                                  onTap: () {},
+                                  child: const Icon(
+                                    EvaIcons.phoneOutline,
+                                    size: 18,
+                                  ),
+                                ),
+                                gapW10,
+                                GestureDetector(
+                                  onTap: () => Get.to(
+                                      const ChatOrderRealtimeScreen(),
+                                      arguments: {
+                                        'orderId': order!.oderId,
+                                        'anotherId': order!.orderUserId,
+                                        'otherId': AuthenticationRepository
+                                            .instance.authUser!.uid
+                                      }),
+                                  child: const Icon(
+                                    EvaIcons.messageSquareOutline,
+                                    size: 18,
+                                  ),
+                                ),
+                              ],
+                            ),
                             Text(userAddress!.toString())
                           ]),
                     )

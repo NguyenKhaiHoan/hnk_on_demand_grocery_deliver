@@ -53,27 +53,22 @@ class TimerController extends GetxController {
 
   void _handleDifferenceChange(Duration event) {
     if (event.inSeconds <= 0) {
-      removeOrder();
+      stopTimmer();
     } else {
       isTimerStarted.value = true;
       _timeLeft.value = formatDuration(event);
     }
   }
 
-  void removeOrder() {
-    if (!isInOrderDetailScreen.value ||
-        OrderController.instance.acceptOrder.value != 1) {
-      Get.back();
-      timer?.cancel();
-      isTimerStarted.value = false;
-      _timeLeft.value = '00';
-      orderController.removeOrder(tag);
-      Get.delete<TimerController>(tag: tag);
-    }
+  void stopTimmer() {
     timer?.cancel();
     isTimerStarted.value = false;
     _timeLeft.value = '00';
-    orderController.removeOrder(tag);
+  }
+
+  void removeOrderAndDeleteController(String orderId) {
+    orderController.removeOrderNotification(orderId);
+    Get.delete<TimerController>(tag: orderId);
   }
 
   String formatDuration(Duration value) {

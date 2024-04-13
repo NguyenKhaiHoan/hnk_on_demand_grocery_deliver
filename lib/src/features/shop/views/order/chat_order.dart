@@ -10,7 +10,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:on_demand_grocery_deliver/src/constants/app_colors.dart';
 import 'package:on_demand_grocery_deliver/src/constants/app_sizes.dart';
 import 'package:on_demand_grocery_deliver/src/features/personalization/controllers/user_controller.dart';
-import 'package:on_demand_grocery_deliver/src/utils/theme/app_style.dart';
 import 'package:uuid/uuid.dart';
 
 class ChatOrderRealtimeScreen extends StatefulWidget {
@@ -23,11 +22,20 @@ class ChatOrderRealtimeScreen extends StatefulWidget {
 
 class _ChatOrderRealtimeScreenState extends State<ChatOrderRealtimeScreen> {
   final String orderId = Get.arguments['orderId'];
+  final String anotherId = Get.arguments['anotherId'];
+  final String otherId = Get.arguments['otherId'];
 
   final List<types.Message> _messages = [];
   final _user = types.User(
-    id: DeliveryPersonController.instance.user.value.id,
-  );
+      id: DeliveryPersonController.instance.user.value.id,
+      firstName: DeliveryPersonController.instance.user.value.name.substring(
+          0,
+          DeliveryPersonController.instance.user.value.name.length > 10
+              ? 10
+              : DeliveryPersonController.instance.user.value.name.length),
+      imageUrl: DeliveryPersonController.instance.user.value.image == ''
+          ? 'https://icons.veryicon.com/png/o/business/menu-icon/user-195.png'
+          : DeliveryPersonController.instance.user.value.image);
 
   @override
   void initState() {
@@ -36,11 +44,9 @@ class _ChatOrderRealtimeScreenState extends State<ChatOrderRealtimeScreen> {
   }
 
   void _addMessage(types.Message message) {
-    setState(() {
-      _messages.insert(0, message);
-    });
-    DatabaseReference ref =
-        FirebaseDatabase.instance.ref().child('Chats/$orderId');
+    DatabaseReference ref = FirebaseDatabase.instance
+        .ref()
+        .child('Chats/$orderId/$anotherId/$otherId');
     ref.push().set({'message': message.toJson()});
   }
 
@@ -79,9 +85,9 @@ class _ChatOrderRealtimeScreenState extends State<ChatOrderRealtimeScreen> {
       previewData: previewData,
     );
 
-    setState(() {
+    setState() {
       _messages[index] = updatedMessage;
-    });
+    }
   }
 
   void _handleAttachmentPressed() {
@@ -129,18 +135,18 @@ class _ChatOrderRealtimeScreenState extends State<ChatOrderRealtimeScreen> {
   }
 
   void _loadMessages() async {
-    DatabaseReference ref =
-        FirebaseDatabase.instance.ref().child('Chats/$orderId');
+    DatabaseReference ref = FirebaseDatabase.instance
+        .ref()
+        .child('Chats/$orderId/$anotherId/$otherId');
     ref.onChildAdded.listen((event) {
       if (event.snapshot.value != null) {
         DataSnapshot snapshot = event.snapshot;
         var message = types.Message.fromJson(
             jsonDecode(jsonEncode(((snapshot.value as Map)['message']))));
-        setState(() {
+
+        setState() {
           _messages.add(message);
-        });
-      } else {
-        // var message = types.Message.fromJson(dataMap);
+        }
       }
     });
   }
@@ -151,7 +157,7 @@ class _ChatOrderRealtimeScreenState extends State<ChatOrderRealtimeScreen> {
           titleSpacing: 0,
           centerTitle: false,
           automaticallyImplyLeading: false,
-          backgroundColor: HAppColor.hTransparentColor,
+          backgroundColor: HAppColor.hBackgroundColor,
           toolbarHeight: 80,
           title: Padding(
             padding: hAppDefaultPaddingL,
@@ -191,12 +197,7 @@ class _ChatOrderRealtimeScreenState extends State<ChatOrderRealtimeScreen> {
           showUserNames: true,
           user: _user,
           theme: const DefaultChatTheme(
-            backgroundColor: HAppColor.hBackgroundColor,
-            seenIcon: Text(
-              'read',
-              style: HAppStyle.paragraph3Regular,
-            ),
-          ),
+              backgroundColor: HAppColor.hBackgroundColor),
         ),
       );
 }
