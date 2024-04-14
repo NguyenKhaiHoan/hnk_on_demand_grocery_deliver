@@ -17,6 +17,8 @@ import 'package:on_demand_grocery_deliver/src/features/shop/models/store_model.d
 import 'package:on_demand_grocery_deliver/src/features/shop/models/store_order_model.dart';
 import 'package:on_demand_grocery_deliver/src/features/shop/models/user_address_model.dart';
 import 'package:on_demand_grocery_deliver/src/features/shop/models/user_model.dart';
+import 'package:on_demand_grocery_deliver/src/features/shop/views/order/chat_order.dart';
+import 'package:on_demand_grocery_deliver/src/repositories/authentication_repository.dart';
 import 'package:on_demand_grocery_deliver/src/repositories/store_repository.dart';
 import 'package:on_demand_grocery_deliver/src/utils/theme/app_style.dart';
 import 'package:on_demand_grocery_deliver/src/utils/utils.dart';
@@ -277,15 +279,16 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
           .indexWhere((element) => element.storeId == store.storeId);
       var storeData =
           await StoreRepository.instance.getStoreInformation(store.storeId);
-      return buildStoreRow(storeData, store, index);
+      return buildStoreRow(storeData, store, index, order.value.oderId);
     } else if (!isStore &&
         order.value.orderStatus != HAppUtils.orderStatus(4)) {
-      return buildUserRow(order.value.orderUserAddress, order.value.orderUser);
+      return buildUserRow(order.value);
     }
     return Container();
   }
 
-  Widget buildStoreRow(StoreModel storeData, StoreOrderModel store, int index) {
+  Widget buildStoreRow(
+      StoreModel storeData, StoreOrderModel store, int index, String orderId) {
     return Container(
       width: HAppSize.deviceWidth,
       padding: hAppDefaultPaddingLR,
@@ -350,13 +353,13 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
               ],
             ),
             gapH6,
-            buildActionRow(),
+            buildStoreActionRow(store, orderId),
             gapH12,
           ]),
     );
   }
 
-  Widget buildUserRow(UserAddressModel orderUserAddress, UserModel orderUser) {
+  Widget buildUserRow(OrderModel order) {
     return Container(
       width: HAppSize.deviceWidth,
       padding: hAppDefaultPaddingLR,
@@ -383,14 +386,14 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
             gapH6,
             Row(
               children: [
-                orderUser.profileImage == ''
+                order.orderUser.profileImage == ''
                     ? Image.asset(
                         'assets/logos/logo.png',
                         height: 60,
                         width: 60,
                       )
                     : ImageNetwork(
-                        image: orderUser.profileImage,
+                        image: order.orderUser.profileImage,
                         height: 60,
                         width: 60,
                         borderRadius: BorderRadius.circular(100),
@@ -406,10 +409,10 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        orderUser.name,
+                        order.orderUser.name,
                         style: HAppStyle.heading5Style,
                       ),
-                      Text(orderUserAddress.toString(),
+                      Text(order.orderUserAddress.toString(),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: HAppStyle.paragraph2Regular.copyWith(
@@ -421,13 +424,13 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
               ],
             ),
             gapH6,
-            buildActionRow(),
+            buildUserActionRow(order),
             gapH12,
           ]),
     );
   }
 
-  Widget buildActionRow() {
+  Widget buildStoreActionRow(StoreOrderModel store, String orderId) {
     return Row(
       children: [
         Text(
@@ -438,9 +441,43 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
         gapW6,
         const Icon(EvaIcons.phoneOutline),
         gapW12,
-        const Icon(EvaIcons.messageSquareOutline),
+        GestureDetector(
+          onTap: () {
+            Get.to(const ChatOrderRealtimeScreen(), arguments: {
+              'orderId': orderId,
+              'anotherId': AuthenticationRepository.instance.authUser!.uid,
+              'otherId': store.storeId
+            });
+          },
+          child: const Icon(EvaIcons.messageSquareOutline),
+        ),
         gapW12,
         const Icon(Icons.storefront_outlined)
+      ],
+    );
+  }
+
+  Widget buildUserActionRow(OrderModel order) {
+    return Row(
+      children: [
+        Text(
+          'Hành động: ',
+          style:
+              HAppStyle.label2Bold.copyWith(color: HAppColor.hBluePrimaryColor),
+        ),
+        gapW6,
+        const Icon(EvaIcons.phoneOutline),
+        gapW12,
+        GestureDetector(
+          onTap: () {
+            Get.to(const ChatOrderRealtimeScreen(), arguments: {
+              'orderId': order.oderId,
+              'anotherId': order.orderUserId,
+              'otherId': AuthenticationRepository.instance.authUser!.uid
+            });
+          },
+          child: const Icon(EvaIcons.messageSquareOutline),
+        )
       ],
     );
   }

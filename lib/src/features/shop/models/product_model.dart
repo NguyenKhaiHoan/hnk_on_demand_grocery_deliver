@@ -96,4 +96,24 @@ class ProductModel {
     }
     return ProductModel.empty();
   }
+
+  factory ProductModel.fromJson(Map<String, dynamic> json) {
+    return ProductModel(
+        id: json['Id'] ?? '',
+        name: json['Name'] ?? '',
+        image: json['Image'] ?? '',
+        categoryId: json['CategoryId'] ?? '',
+        description: json['Description'] ?? '',
+        status: json['Status'] ?? '',
+        price: int.parse((json['Price'] ?? 0).toString()),
+        salePersent: int.parse((json['SalePersent'] ?? 0).toString()),
+        priceSale: int.parse((json['PriceSale'] ?? 0).toString()),
+        unit: json['Unit'] ?? '',
+        countBuyed: int.parse((json['CountBuyed'] ?? 0).toString()),
+        rating: double.parse((json['Rating'] ?? 5.0).toString()),
+        origin: json['Origin'] ?? '',
+        storeId: json['StoreId'] ?? '',
+        uploadTime: DateTime.fromMillisecondsSinceEpoch(
+            int.parse((json['UploadTime'] ?? 0).toString())));
+  }
 }

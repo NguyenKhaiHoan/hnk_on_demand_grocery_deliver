@@ -40,6 +40,8 @@ class OrderModel {
 
   int activeStep;
 
+  List<ProductInCartModel>? replacedProducts;
+
   OrderModel(
       {required this.oderId,
       required this.orderUserId,
@@ -53,6 +55,7 @@ class OrderModel {
       required this.paymentStatus,
       required this.orderType,
       this.timeOrder,
+      required this.replacedProducts,
       required this.deliveryCost,
       required this.discount,
       this.voucher,
@@ -81,6 +84,7 @@ class OrderModel {
         orderType: '',
         deliveryCost: 0,
         discount: 0,
+        replacedProducts: <ProductInCartModel>[],
       );
 
   Map<String, dynamic> toJson() {
@@ -111,7 +115,8 @@ class OrderModel {
       'TimeOrder': timeOrder,
       'DeliveryCost': deliveryCost,
       'Discount': discount,
-      'Voucher': voucher
+      'Voucher': voucher!.toJson(),
+      'ReplacedProducts': replacedProducts?.map((e) => e.toJson()).toList()
     };
   }
 
@@ -169,6 +174,11 @@ class OrderModel {
           discount: data['Discount'] ?? 0,
           voucher: data['Voucher'] != null
               ? VoucherModel.fromJson(data['Voucher'])
+              : null,
+          replacedProducts: data['ReplacedProducts'] != null
+              ? (data['ReplacedProducts'] as List<dynamic>)
+                  .map((e) => ProductInCartModel.fromJson(e))
+                  .toList()
               : null);
     }
     return OrderModel.empty();
@@ -224,7 +234,8 @@ class OrderModel {
         timeOrder: json['TimeOrder'] != null ? json['TimeOrder'] as String : null,
         deliveryCost: json['DeliveryCost'] ?? 0,
         discount: json['Discount'] ?? 0,
-        voucher: json['Voucher'] != null ? VoucherModel.fromJson(json['Voucher']) : null);
+        voucher: json['Voucher'] != null ? VoucherModel.fromJson(json['Voucher']) : null,
+        replacedProducts: json['ReplacedProducts'] != null ? (json['ReplacedProducts'] as List<dynamic>).map((e) => ProductInCartModel.fromJson(e)).toList() : []);
   }
 
   @override
