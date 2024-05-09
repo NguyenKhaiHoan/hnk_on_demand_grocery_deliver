@@ -60,12 +60,16 @@ class OrderDetailScreen extends StatelessWidget {
         }
 
         if (snapshot.hasError) {
-          Get.back();
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            Get.back();
+          });
           return const SizedBox();
         }
 
         if (!snapshot.hasData || snapshot.data!.snapshot.value == null) {
-          Get.back();
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            Get.back();
+          });
           return const SizedBox();
         }
 
@@ -74,13 +78,69 @@ class OrderDetailScreen extends StatelessWidget {
                 as Map<String, dynamic>);
 
         if (order.deliveryPerson != null) {
-          orderController.acceptOrder.value = 1;
+          if (order.deliveryPerson ==
+                  DeliveryPersonController.instance.user.value ||
+              order.deliveryPersonId ==
+                  DeliveryPersonController.instance.user.value.id) {
+            orderController.acceptOrder.value = 1;
+          } else {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              HAppUtils.showSnackBarWarning(
+                  'Đơn hàng này đã được nhận bởi người khác',
+                  'Người giao hàng khác trong khu vực này đã nhận đơn hàng!');
+              Get.back();
+            });
+            return const SizedBox();
+          }
         }
         return Scaffold(
             appBar: AppBar(
               toolbarHeight: 80,
               leading: GestureDetector(
-                onTap: () => Get.back(),
+                onTap: () {
+                  if (order.orderType == 'uu_tien') {
+                    showDialog(
+                      context: Get.overlayContext!,
+                      barrierDismissible: false,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: const Text('Từ chối đơn hàng'),
+                          content: Text(
+                            'Đây là đơn hàng với phương thức giao hàng ưu tiên được hệ thống tự động giúp bạn nhận đơn, bạn có chắc chắn muốn hủy đơn này',
+                            style: HAppStyle.paragraph2Regular
+                                .copyWith(color: HAppColor.hGreyColorShade600),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                Get.back();
+                                Get.back();
+                                orderController.listOrder.removeWhere(
+                                    (element) =>
+                                        element.oderId == order.oderId);
+                              },
+                              child: Text(
+                                'Từ chối',
+                                style: HAppStyle.label4Bold
+                                    .copyWith(color: HAppColor.hRedColor),
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () => Get.back(),
+                              child: Text(
+                                'Trở lại đơn hàng',
+                                style: HAppStyle.label4Bold.copyWith(
+                                    color: HAppColor.hBluePrimaryColor),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  } else {
+                    Get.back();
+                  }
+                },
                 child: Padding(
                   padding: hAppDefaultPaddingL,
                   child: Container(
@@ -429,7 +489,7 @@ class OrderDetailScreen extends StatelessWidget {
                     activeThumbColor: HAppColor.hBluePrimaryColor,
                     activeTrackColor: HAppColor.hBlueSecondaryColor,
                     onSwipe: () async {
-                      orderController.processOrder(
+                      await orderController.processOrder(
                           order, order.orderUser.cloudMessagingToken!);
                     },
                     child: Obx(() => Text(

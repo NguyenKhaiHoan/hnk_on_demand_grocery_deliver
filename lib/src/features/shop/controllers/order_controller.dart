@@ -100,7 +100,7 @@ class OrderController extends GetxController {
 
       String urlString =
           'https://www.google.com/maps/dir/?api=1&origin=${currentPosition.latitude},${currentPosition.longitude}&destination=${userAddress.latitude},${userAddress.longitude}$waypoints&travelmode=driving&dir_action=navigate';
-
+      print(urlString);
       final url = Uri.parse(
         urlString,
       );
@@ -121,76 +121,93 @@ class OrderController extends GetxController {
   var checkQrListStore = <bool>[].obs;
 
   Future<void> processOrder(OrderModel order, String userFcmToken) async {
-    if (acceptOrder.value == 0) {
-      acceptOrder.value = 1;
-      for (int i = 0; i < listOrder.length; i++) {
-        final timerController =
-            Get.find<TimerController>(tag: listOrder[i].oderId);
-        timerController.stopTimmer();
-        if (listOrder[i].oderId != order.oderId) {
-          timerController.removeOrderAndDeleteController(listOrder[i].oderId);
-        }
-      }
-      listOrder.clear();
-      var ref = FirebaseDatabase.instance.ref("Orders/${order.oderId}");
-      await ref.update({
-        "OrderStatus": HAppUtils.orderStatus(2),
-        "DeliveryPerson": DeliveryPersonController.instance.user.value.toJson(),
-        "DeliveryPersonId": DeliveryPersonController.instance.user.value.id
-      });
-
-      var ref2 = FirebaseDatabase.instance.ref(
-          "DeliveryPersons/${DeliveryPersonController.instance.user.value.id}");
-      await ref2.update({
-        "ActiveOrderId": order.oderId,
-      });
-      MapController.instance.deliveryProcess.value.activeOrderId = order.oderId;
-      MapController.instance.deliveryProcess.refresh();
-
-      HNotificationService.sendNotificationToUser(userFcmToken);
-
-      checkQrListStore.value =
-          List<bool>.filled(order.storeOrders.length, false);
-    } else if (acceptOrder.value == 1) {
-      if (order.orderStatus == HAppUtils.orderStatus(2)) {
-        bool checkAllProduct = true;
-        for (int i = 0; i < order.storeOrders.length; i++) {
-          if (order.storeOrders[i].isCheckFullProduct != 1) {
-            checkAllProduct = false;
-            HAppUtils.showSnackBarError("Chưa kiểm tra",
-                'Bạn chưa kiểm tra sản phẩm của cửa hàng: ${order.storeOrders[i].name}');
-            return;
+    try {
+      if (acceptOrder.value == 0) {
+        acceptOrder.value = 1;
+        for (int i = 0; i < listOrder.length; i++) {
+          final timerController =
+              Get.find<TimerController>(tag: listOrder[i].oderId);
+          timerController.stopTimmer();
+          if (listOrder[i].oderId != order.oderId) {
+            timerController.removeOrderAndDeleteController(listOrder[i].oderId);
           }
         }
-        if (checkAllProduct) {
-          var ref = FirebaseDatabase.instance.ref("Orders/${order.oderId}");
-          await ref.update({
-            "OrderStatus": HAppUtils.orderStatus(3),
+        listOrder.clear();
+        var ref = FirebaseDatabase.instance.ref("Orders/${order.oderId}");
+        var ref2 = FirebaseDatabase.instance.ref(
+            "DeliveryPersons/${DeliveryPersonController.instance.user.value.id}");
+
+        await ref.update({
+          "OrderStatus": HAppUtils.orderStatus(2),
+          "DeliveryPerson":
+              DeliveryPersonController.instance.user.value.toJson(),
+          "DeliveryPersonId": DeliveryPersonController.instance.user.value.id
+        }).then((value) async {
+          await ref2.update({
+            "ActiveOrderId": order.oderId,
+          }).then((value) async {
+            MapController.instance.deliveryProcess.value.activeOrderId =
+                order.oderId;
+            MapController.instance.deliveryProcess.refresh();
+
+            await HNotificationService.sendNotificationToUser(
+                userFcmToken, order.orderUserId);
           });
-        }
-      } else if (order.orderStatus == HAppUtils.orderStatus(3)) {
-        Position currentPosition = await HAppUtils.getGeoLocationPosition();
-        final distance = HAppUtils.calculateDistance(
-            currentPosition.latitude,
-            currentPosition.longitude,
-            order.orderUserAddress.latitude,
-            order.orderUserAddress.longitude);
-        if (distance < 50) {
-          var ref = FirebaseDatabase.instance.ref("Orders/${order.oderId}");
-          await ref.update({
-            "OrderStatus": HAppUtils.orderStatus(4),
-          });
-          HNotificationService.sendNotificationToUserComplete(userFcmToken);
-          await FirebaseDatabase.instance
-              .ref(
-                  "DeliveryPersons/${DeliveryPersonController.instance.user.value.id}/ActiveOrderId")
-              .remove();
-          MapController.instance.deliveryProcess.value.activeOrderId ?? '';
-        } else {
-          HAppUtils.showSnackBarWarning('Không đúng vị trí',
-              'Có vẻ khoảng cách từ vị trí hiện tại của bạn với vị trí cửa khách hàng còn khá xa');
+        });
+
+        checkQrListStore.value =
+            List<bool>.filled(order.storeOrders.length, false);
+      } else if (acceptOrder.value == 1) {
+        if (order.orderStatus == HAppUtils.orderStatus(2)) {
+          bool checkAllProduct = true;
+          for (int i = 0; i < order.storeOrders.length; i++) {
+            if (order.storeOrders[i].isCheckFullProduct != 1) {
+              checkAllProduct = false;
+              HAppUtils.showSnackBarError("Chưa kiểm tra",
+                  'Bạn chưa kiểm tra sản phẩm của cửa hàng: ${order.storeOrders[i].name}');
+              return;
+            }
+          }
+          if (checkAllProduct) {
+            var ref = FirebaseDatabase.instance.ref("Orders/${order.oderId}");
+            await ref.update({
+              "OrderStatus": HAppUtils.orderStatus(3),
+            }).then((value) async {
+              await HNotificationService.sendNotificationToUserAllReceive(
+                  userFcmToken, order.orderUserId, order.oderId);
+            });
+          }
+        } else if (order.orderStatus == HAppUtils.orderStatus(3)) {
+          Position currentPosition = await HAppUtils.getGeoLocationPosition();
+          final distance = HAppUtils.calculateDistance(
+              currentPosition.latitude,
+              currentPosition.longitude,
+              order.orderUserAddress.latitude,
+              order.orderUserAddress.longitude);
+          if (distance < 50) {
+            var ref = FirebaseDatabase.instance.ref("Orders/${order.oderId}");
+            await ref.update({
+              "OrderStatus": HAppUtils.orderStatus(4),
+            }).then((value) async {
+              await HNotificationService.sendNotificationToUserComplete(
+                      userFcmToken, order.orderUserId, order.oderId)
+                  .then((value) async {
+                await FirebaseDatabase.instance
+                    .ref(
+                        "DeliveryPersons/${DeliveryPersonController.instance.user.value.id}/ActiveOrderId")
+                    .remove();
+                MapController.instance.deliveryProcess.value.activeOrderId ??
+                    '';
+              });
+            });
+          } else {
+            HAppUtils.showSnackBarWarning('Không đúng vị trí',
+                'Có vẻ khoảng cách từ vị trí hiện tại của bạn với vị trí cửa khách hàng còn khá xa');
+          }
         }
       }
+    } catch (e) {
+      HAppUtils.showSnackBarError('Lỗi', 'Đã xảy ra lối: ${e.toString()}');
     }
   }
 }

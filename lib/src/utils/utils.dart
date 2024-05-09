@@ -16,7 +16,7 @@ class HAppUtils {
       case 0:
         return 'Đơn đặt hàng thành công';
       case 1:
-        return 'Cửa hàng xác nhận';
+        return 'Cửa hàng tạp hóa xác nhận';
       case 2:
         return 'Người giao hàng xác nhận';
       case 3:

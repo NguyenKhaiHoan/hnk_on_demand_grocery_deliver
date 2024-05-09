@@ -28,6 +28,7 @@ class ShowAllProductInStore extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Future.delayed(Duration.zero).then((value) {
+      print('index: $index');
       orderController.checkProduct.value =
           order.storeOrders[index].isCheckFullProduct == 1
               ? 1
@@ -163,13 +164,13 @@ class ShowAllProductInStore extends StatelessWidget {
                     .where((element) =>
                         element.storeId == order.storeOrders[index].storeId)
                     .length,
-                itemBuilder: (context, index) {
+                itemBuilder: (context, indexProduct) {
                   return ProductItemHorizalWidget(
                       model: order.orderProducts
                           .where((element) =>
                               element.storeId ==
                               order.storeOrders[index].storeId)
-                          .toList()[index]);
+                          .toList()[indexProduct]);
                 },
                 separatorBuilder: (context, index) => gapH12,
               ),

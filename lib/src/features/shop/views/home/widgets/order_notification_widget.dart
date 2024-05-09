@@ -49,10 +49,18 @@ class OrderNotificationWidget extends StatelessWidget {
                       padding: const EdgeInsets.fromLTRB(5, 5, 5, 5),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(10),
-                        color: HAppColor.hRedColor,
+                        color: order.orderType == 'uu_tien'
+                            ? HAppColor.hRedColor
+                            : order.orderType == 'tieu_chuan'
+                                ? HAppColor.hBluePrimaryColor
+                                : HAppColor.hOrangeColor,
                       ),
                       child: Text(
-                        'Tiêu chuẩn',
+                        order.orderType == 'uu_tien'
+                            ? 'Ưu tiên'
+                            : order.orderType == 'tieu_chuan'
+                                ? 'Tiêu chuẩn'
+                                : 'Đặt lịch',
                         style: HAppStyle.paragraph3Regular
                             .copyWith(color: HAppColor.hWhiteColor),
                       ),

@@ -64,7 +64,8 @@ class VoucherModel {
     final data = document.data()!;
     return VoucherModel(
         id: document.id,
-        usedById: List<String>.from(data['UsedById']),
+        usedById:
+            data['UsedById'] != null ? List<String>.from(data['UsedById']) : [],
         startDate: DateTime.fromMillisecondsSinceEpoch(
             int.parse((data['StartDate'] ?? 0).toString())),
         endDate: DateTime.fromMillisecondsSinceEpoch(
@@ -86,7 +87,8 @@ class VoucherModel {
   factory VoucherModel.fromJson(Map<String, dynamic> json) {
     return VoucherModel(
         id: json['Id'],
-        usedById: List<String>.from(json['UsedById']),
+        usedById:
+            json['UsedById'] != null ? List<String>.from(json['UsedById']) : [],
         startDate: DateTime.fromMillisecondsSinceEpoch(
             int.parse((json['StartDate'] ?? 0).toString())),
         endDate: DateTime.fromMillisecondsSinceEpoch(

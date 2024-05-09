@@ -6,6 +6,7 @@ import 'package:on_demand_grocery_deliver/src/common_widgets/user_image_logo.dar
 import 'package:on_demand_grocery_deliver/src/constants/app_colors.dart';
 import 'package:on_demand_grocery_deliver/src/constants/app_sizes.dart';
 import 'package:on_demand_grocery_deliver/src/features/personalization/controllers/user_controller.dart';
+import 'package:on_demand_grocery_deliver/src/features/personalization/views/profile/profile_detail.dart';
 import 'package:on_demand_grocery_deliver/src/features/shop/controllers/drawer_controller.dart';
 import 'package:on_demand_grocery_deliver/src/repositories/authentication_repository.dart';
 import 'package:on_demand_grocery_deliver/src/routes/app_pages.dart';
@@ -73,9 +74,9 @@ class _MenuScreenState extends State<MenuScreen> {
                     ),
                     GestureDetector(
                       onTap: () {
-                        print(deliveryPersonController.user.value.name
-                            .toString());
                         DeliveryPersonController.instance.fetchUserRecord();
+                        DeliveryPersonController.instance.user.refresh();
+                        Get.to(const ProfileDetailScreen());
                       },
                       child: const MenuItem(
                         icon: Icon(

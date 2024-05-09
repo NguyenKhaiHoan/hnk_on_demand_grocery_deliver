@@ -35,6 +35,8 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
   String orderId = Get.arguments['orderId'];
   String deliveryPersonId = Get.arguments['deliveryPersonId'];
 
+  var deliveryProcess = DeliveryProcessModel.empty().obs;
+
   @override
   void initState() {
     super.initState();
@@ -73,17 +75,19 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
           firstTime = false;
         }
 
-        DeliveryProcessModel deliveryProcess = DeliveryProcessModel.fromJson(
+        deliveryProcess.value = DeliveryProcessModel.fromJson(
             jsonDecode(jsonEncode(event.snapshot.value)));
         await mapController.setZoom(zoomLevel: 16);
         await mapController.goToLocation(
           GeoPoint(
-              latitude: deliveryProcess.l[0], longitude: deliveryProcess.l[1]),
+              latitude: deliveryProcess.value.l[0],
+              longitude: deliveryProcess.value.l[1]),
         );
 
         await mapController.setStaticPosition([
           GeoPoint(
-              latitude: deliveryProcess.l[0], longitude: deliveryProcess.l[1])
+              latitude: deliveryProcess.value.l[0],
+              longitude: deliveryProcess.value.l[1])
         ], 'deliveryPerson');
       }
     });
@@ -191,11 +195,13 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
     );
   }
 
-  void loadMapRoad() async {
+  void loadMapRoad(OrderModel orderModel) async {
     RoadInfo road = await mapController.drawRoad(
         GeoPoint(latitude: 20.9835, longitude: 105.7914),
-        GeoPoint(latitude: 20.9807, longitude: 105.7971),
-        roadType: RoadType.car,
+        GeoPoint(
+            latitude: deliveryProcess.value.l[0],
+            longitude: deliveryProcess.value.l[1]),
+        roadType: RoadType.bike,
         roadOption: const RoadOption(
             roadColor: HAppColor.hBluePrimaryColor, roadBorderWidth: 10),
         intersectPoint: [
@@ -204,9 +210,6 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
                 latitude: order.value.storeOrders[i].latitude,
                 longitude: order.value.storeOrders[i].longitude),
         ]);
-
-    print(order.value.deliveryPerson!.name);
-
     print('Distance: ${road.distance ?? 0.0}');
     print('Duration: ${road.duration ?? 0.0}');
   }
@@ -216,10 +219,13 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
         id: "deliveryPerson",
         markerIcon: MarkerIcon(
           iconWidget: Container(
-            decoration: const BoxDecoration(
-                color: HAppColor.hBluePrimaryColor, shape: BoxShape.circle),
+            decoration: const BoxDecoration(color: HAppColor.hDarkColor),
             height: 30,
             width: 30,
+            child: const Icon(
+              EvaIcons.person,
+              color: HAppColor.hWhiteColor,
+            ),
           ),
         ));
 
@@ -227,10 +233,10 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
         id: "user",
         markerIcon: MarkerIcon(
           iconWidget: Container(
-            decoration: const BoxDecoration(
-                color: HAppColor.hRedColor, shape: BoxShape.circle),
+            decoration: BoxDecoration(color: HAppColor.hGreyColorShade300),
             height: 30,
             width: 30,
+            child: const Icon(EvaIcons.personOutline),
           ),
         ));
 
@@ -238,15 +244,24 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
         id: "store",
         markerIcon: MarkerIcon(
           iconWidget: Container(
-            decoration: const BoxDecoration(
-                color: HAppColor.hOrangeColor, shape: BoxShape.circle),
+            decoration: BoxDecoration(color: HAppColor.hGreyColorShade300),
             height: 30,
             width: 30,
+            child: const Icon(Icons.storefront_outlined),
           ),
         ));
 
-    await mapController.setStaticPosition(
-        [GeoPoint(latitude: 20.9807, longitude: 105.7971)], 'user');
+    await mapController.setStaticPosition([
+      GeoPoint(
+          latitude: order.value.orderUserAddress.latitude,
+          longitude: order.value.orderUserAddress.longitude)
+    ], 'user');
+
+    await mapController.setStaticPosition([
+      GeoPoint(
+          latitude: deliveryProcess.value.l[0],
+          longitude: deliveryProcess.value.l[1])
+    ], 'deliveryPerson');
 
     await mapController.setStaticPosition([
       for (int i = 0; i < order.value.storeOrders.length; i++)
@@ -255,7 +270,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
             longitude: order.value.storeOrders[i].longitude),
     ], 'store');
 
-    loadMapRoad();
+    loadMapRoad(order.value);
   }
 
   @override

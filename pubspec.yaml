@@ -112,6 +112,7 @@ dependencies:
   mobile_scanner: ^4.0.1
   rounded_background_text: ^0.5.0
   flutter_osm_plugin: ^0.70.4
+  timeago: ^3.6.1
 
 dev_dependencies:
   flutter_test:

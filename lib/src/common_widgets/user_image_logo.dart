@@ -18,38 +18,24 @@ class UserImageLogoWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return deliveryPersonController.isLoading.value ||
-            deliveryPersonController.isUploadImageLoading.value
-        ? CustomShimmerWidget.circular(width: size, height: size)
-        : deliveryPersonController.user.value.image == ''
-            ? GestureDetector(
-                onTap: () {},
-                child: SizedBox(
-                  width: size,
-                  height: size,
-                  child: const CircleAvatar(
-                    backgroundImage: AssetImage('assets/logos/logo.png'),
-                  ),
-                ))
-            : ImageNetwork(
-                image: deliveryPersonController.user.value.image,
-                height: size,
-                width: size,
-                duration: 500,
-                curve: Curves.easeIn,
-                onPointer: true,
-                debugPrint: false,
-                fullScreen: false,
-                fitAndroidIos: BoxFit.cover,
-                fitWeb: BoxFitWeb.cover,
-                borderRadius: BorderRadius.circular(100),
-                onLoading:
-                    CustomShimmerWidget.circular(width: size, height: size),
-                onError: const Icon(
-                  Icons.error,
-                  color: Colors.red,
-                ),
-                onTap: () => null,
-              );
+    return ImageNetwork(
+      image: deliveryPersonController.user.value.image,
+      height: size,
+      width: size,
+      duration: 500,
+      curve: Curves.easeIn,
+      onPointer: true,
+      debugPrint: false,
+      fullScreen: false,
+      fitAndroidIos: BoxFit.cover,
+      fitWeb: BoxFitWeb.cover,
+      borderRadius: BorderRadius.circular(100),
+      onLoading: CustomShimmerWidget.circular(width: size, height: size),
+      onError: const Icon(
+        Icons.error,
+        color: Colors.red,
+      ),
+      onTap: () => null,
+    );
   }
 }

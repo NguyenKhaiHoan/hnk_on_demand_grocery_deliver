@@ -194,9 +194,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 .equalTo(DeliveryPersonController.instance.user.value.id),
             itemBuilder: (context, snapshot, animation, index) {
               final orderData = snapshot.value as Map;
-              if (orderData.isEmpty ||
-                  orderData == null ||
-                  orderData['DeliveryPerson'] == null) {
+              if (orderData.isEmpty || orderData['DeliveryPerson'] == null) {
                 return const Text('Không có đơn đang hoạt động bây giờ');
               } else {
                 if (orderData['DeliveryPerson'] != null) {
@@ -250,10 +248,32 @@ class _HomeScreenState extends State<HomeScreen> {
                               children: [
                                 Row(children: [
                                   Text(
-                                    '#${(order.oderId).substring(0, 15)}...',
+                                    '#${(order.oderId).substring(0, 6)}...',
                                     style: HAppStyle.label2Bold
                                         .copyWith(fontWeight: FontWeight.bold),
                                     maxLines: 1,
+                                  ),
+                                  Container(
+                                    padding:
+                                        const EdgeInsets.fromLTRB(5, 5, 5, 5),
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(10),
+                                      color: order.orderType == 'uu_tien'
+                                          ? HAppColor.hRedColor
+                                          : order.orderType == 'tieu_chuan'
+                                              ? HAppColor.hBluePrimaryColor
+                                              : HAppColor.hOrangeColor,
+                                    ),
+                                    child: Text(
+                                      order.orderType == 'uu_tien'
+                                          ? 'Ưu tiên'
+                                          : order.orderType == 'tieu_chuan'
+                                              ? 'Tiêu chuẩn'
+                                              : 'Đặt lịch',
+                                      style: HAppStyle.paragraph3Regular
+                                          .copyWith(
+                                              color: HAppColor.hWhiteColor),
+                                    ),
                                   ),
                                   const Spacer(),
                                   Column(
